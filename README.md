@@ -7,13 +7,79 @@ El objetivo del workshop es mostrar cómo un equipo de QA puede pasar de casos d
 manuales a casos automatizados, usando herramientas de IA como
 [Antigravity](docs/antigravity-para-testing.md) para acelerar el trabajo.
 
+## ¿Qué es Antigravity?
+
+**Antigravity** es un editor de código de Google (parecido a Visual Studio Code) con un
+**agente de inteligencia artificial** integrado. Al agente se le habla en español, como a un
+compañero de equipo, y él:
+
+- **Escribe** el código de los tests.
+- **Abre el navegador** y recorre la aplicación para encontrar botones, campos y mensajes.
+- **Ejecuta** los tests y muestra el resultado.
+- **Deja evidencia**: capturas, grabaciones y un plan de lo que hizo, para que una persona lo revise.
+
+> Explicación para autoridades y no técnicos: [Antigravity aplicado a QA y Testing](docs/antigravity-para-testing.md).
+
+## Cómo lo uso como tester senior
+
+La IA no decide qué probar: **eso lo define el tester**. La IA hace el trabajo de programar.
+Mi flujo de trabajo para cada caso es este:
+
+| Paso | Quién | Qué se hace |
+|---|---|---|
+| 1. Diseñar el caso | Tester | Defino ID, pasos y resultado esperado, como en cualquier caso de prueba manual |
+| 2. Registrarlo | Tester | Lo cargo en el [tablero de GitHub](#tablero-de-seguimiento) en **Todo** |
+| 3. Pedirlo | Tester → IA | Completo la [plantilla](prompts/plantilla-requerimiento.md) y la adjunto en el chat del agente |
+| 4. Explorar y programar | IA | El agente navega la app, encuentra los elementos y escribe el test |
+| 5. Revisar | Tester | Corro `npm run test:headed`, miro la ejecución y verifico que el test pruebe lo que pedí |
+| 6. Guardar | Tester | Commit con `Closes #N`: el caso pasa solo a **Done** en el tablero |
+
+**Qué reviso siempre antes de aprobar un test hecho por IA:**
+
+- Que verifique el **resultado esperado** real y no solo que "la página cargó".
+- Que **falle** cuando tiene que fallar (por ejemplo, cambiando la contraseña a una incorrecta).
+- Que **no** tenga usuarios ni contraseñas escritos en el código: van siempre en `.env`.
+- Que el ID y el nombre del test coincidan con el caso del tablero.
+
+### Prompt plantilla para crear un caso
+
+Los prompts se guardan como archivos en la carpeta [prompts/](prompts/), para adjuntarlos en
+el chat del agente:
+
+| Archivo | Para qué |
+|---|---|
+| [prompts/plantilla-requerimiento.md](prompts/plantilla-requerimiento.md) | Plantilla vacía: se copia y se completa con cada requerimiento nuevo |
+| [prompts/LOGIN-02.md](prompts/LOGIN-02.md) | Ejemplo completo: login con contraseña incorrecta |
+
+Con cada requerimiento, el agente devuelve: archivos modificados, comandos para ejecutar los
+tests por consola, reporte de casos, explicación simple y un **resumen para la líder**.
+
+> Para crear el pipeline de CI con IA, ver [Guía: crear el CI con IA](docs/guia-ci-con-ia.md).
+
 ## Casos automatizados
 
-| ID | Caso | Archivo |
-|---|---|---|
-| SMOKE-01 | La página de login abre en Chrome | [tests/smoke.spec.ts](tests/smoke.spec.ts) |
-| LOGIN-01 | Login exitoso con usuario válido | [tests/login.spec.ts](tests/login.spec.ts) |
-| LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | [tests/login.spec.ts](tests/login.spec.ts) |
+| ID | Caso | Archivo | Issue |
+|---|---|---|---|
+| SMOKE-01 | La página de login abre en Chrome | [tests/smoke.spec.ts](tests/smoke.spec.ts) | #1 |
+| LOGIN-01 | Login exitoso con usuario válido | [tests/login.spec.ts](tests/login.spec.ts) | #2 |
+| LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | [tests/login.spec.ts](tests/login.spec.ts) | #3 |
+| LOGIN-02 | Login con contraseña incorrecta muestra el mensaje de error exacto | [tests/login.spec.ts](tests/login.spec.ts) | #4 |
+| LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | [tests/login.spec.ts](tests/login.spec.ts) | #4 |
+
+## Tablero de seguimiento
+
+Los casos de prueba se gestionan en el tablero
+[QA Automation](https://github.com/users/maximilianofni/projects/6) de GitHub Projects.
+Cada caso es un *issue* con su estado (**Todo**, **In Progress**, **Done**) y el campo
+**Producto**, que permite sumar más sistemas en el mismo tablero:
+
+| Producto | Estado |
+|---|---|
+| ANPR | En curso |
+| Biblioteca Digital | Próximamente |
+| Reconocimiento Facial Mendoza | Próximamente |
+| AS | Próximamente |
+| VMS | Próximamente |
 
 ## Requisitos
 
@@ -52,6 +118,7 @@ Cuando un test falla, el reporte guarda captura de pantalla, video y traza para 
 ```
 tests/                  Casos de prueba automatizados
 docs/                   Documentación del workshop
+prompts/                Prompts para el agente de IA (uno por requerimiento)
 .github/workflows/      Pipelines de CI y releases
 playwright.config.ts    Configuración de Playwright (navegador, reportes, evidencias)
 .env.example            Plantilla de variables del ambiente
@@ -90,11 +157,12 @@ Para publicar una versión nueva:
 
 ## Convención de commits
 
-Cada cambio va en un commit separado, con un prefijo que indica el tipo:
+Cada cambio va en un commit separado, con un prefijo que indica el tipo. Si el commit
+resuelve un caso del tablero, se agrega `Closes #N` para que el issue se cierre solo.
 
 | Prefijo | Uso | Ejemplo |
 |---|---|---|
-| `test:` | Casos de prueba nuevos o modificados | `test: agrega LOGIN-02 contraseña incorrecta` |
+| `test:` | Casos de prueba nuevos o modificados | `test: agrega LOGIN-02 contraseña incorrecta (Closes #4)` |
 | `docs:` | Documentación | `docs: agrega README` |
 | `ci:` | Pipelines de CI/CD | `ci: agrega validación de tests` |
 | `fix:` | Corrección de un test roto | `fix: corrige selector del botón login` |
