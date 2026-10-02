@@ -73,14 +73,15 @@ git checkout main
 Copiá y pegá esto en el chat del agente:
 
 ```
-Soy tester y trabajo en este proyecto de tests automatizados con Playwright.
+Trabajo en el equipo de QA de este proyecto de tests automatizados (Playwright, Cypress y Selenium).
 Necesito que crees el pipeline de CI de GitHub Actions en .github/workflows/ci.yml.
 
 Requisitos:
 1. Que se ejecute en cada push a main, en cada pull request y también a mano.
 2. Primera etapa "Validar tests": en los servidores de GitHub (ubuntu-latest),
-   instalar Node 20, instalar dependencias con npm ci y verificar que los tests
-   compilan usando "npx playwright test --list" (sin ejecutarlos).
+   instalar Node 22, instalar dependencias con npm ci y verificar que los tests
+   compilan sin ejecutarlos: Playwright con "npx playwright test --list",
+   Cypress con "npx tsc --noEmit -p cypress" y Selenium con "npx mocha --dry-run".
 3. Segunda etapa "Tests end-to-end": que corra solo si la primera pasó.
    Nuestra app de testing está en la red interna de la empresa, así que esta
    etapa tiene que correr en un self-hosted runner y quedar desactivada salvo

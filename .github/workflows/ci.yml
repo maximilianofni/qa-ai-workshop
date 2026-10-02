@@ -14,11 +14,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
+        env:
+          CYPRESS_INSTALL_BINARY: 0 # la validación no necesita el programa de Cypress
       # Compila todos los tests y los lista, sin ejecutarlos
-      - run: npx playwright test --list
+      - name: Playwright
+        run: npx playwright test --list
+      - name: Cypress
+        run: npx tsc --noEmit -p cypress
+      - name: Selenium
+        run: npx mocha --dry-run --reporter spec
 
   e2e:
     name: Tests end-to-end
@@ -36,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm ci
       - run: npx playwright test
       - uses: actions/upload-artifact@v4
