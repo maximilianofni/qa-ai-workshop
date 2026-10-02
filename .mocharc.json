@@ -1,0 +1,14 @@
+{
+  "spec": ["selenium/tests/**/*.spec.ts"],
+  "require": ["tsx/cjs"],
+  "timeout": 60000,
+  "reporter": "mochawesome",
+  "reporter-option": [
+    "reportDir=selenium/reports",
+    "reportFilename=index",
+    "reportPageTitle=Reporte Selenium - ANPR",
+    "reportTitle=Selenium - ANPR",
+    "charts=true",
+    "quiet=true"
+  ]
+}
