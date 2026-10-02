@@ -4,6 +4,20 @@ Todos los cambios relevantes del proyecto se registran en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.3.0] - 2026-10-02
+
+### Agregado
+- Casos de ANPR (SMOKE-01, LOGIN-01, LOGIN-02, LOGIN-03, LOGOUT-01) en **Cypress** y **Selenium**.
+- Reportes HTML de Cypress y Selenium (`npm run cy:report`, `npm run se:report`).
+- Reporte HTML de comparación de tiempos entre herramientas, con historial (`npm run comparar`).
+- Validación en CI de los tests de las tres herramientas.
+
+### Cambiado
+- README: el proyecto se presenta como multi-herramienta; flujo de trabajo QA + agente de IA y
+  criterios de revisión de tests generados por IA.
+- Plantilla de requerimiento: campo **Herramienta** y resumen ejecutivo para la líder del equipo.
+- Node.js 22 como versión mínima.
+
 ## [1.2.0] - 2026-10-02
 
 ### Agregado
@@ -29,6 +43,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - LOGIN-01: login exitoso con usuario válido.
 - LOGOUT-01: cerrar sesión vuelve al login y bloquea el acceso al panel.
 
+[1.3.0]: https://github.com/maximilianofni/qa-ai-workshop/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/maximilianofni/qa-ai-workshop/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/maximilianofni/qa-ai-workshop/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/maximilianofni/qa-ai-workshop/releases/tag/v1.0.0
