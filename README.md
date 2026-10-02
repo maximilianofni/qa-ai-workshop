@@ -1,70 +1,103 @@
-# QA AI Workshop – Tests automatizados de ANPR
+# QA AI Workshop – Automatización de pruebas con agentes de IA
 
-Pruebas automatizadas end-to-end de la aplicación **ANPR (UltraIP)**, escritas con
-[Playwright](https://playwright.dev/) y desarrolladas con asistencia de IA.
+Automatización de pruebas end-to-end de los sistemas de la organización, desarrollada con un
+**agente de inteligencia artificial** bajo la dirección y revisión del equipo de QA.
 
-El objetivo del workshop es mostrar cómo un equipo de QA puede pasar de casos de prueba
-manuales a casos automatizados, usando herramientas de IA como
-[Antigravity](docs/antigravity-para-testing.md) para acelerar el trabajo.
+El proyecto implementa **los mismos casos de prueba en distintas herramientas de
+automatización** para compararlas en condiciones reales, empezando por la aplicación
+**ANPR (UltraIP)**.
 
-## ¿Qué es Antigravity?
+## Herramientas
 
-**Antigravity** es un editor de código de Google (parecido a Visual Studio Code) con un
-**agente de inteligencia artificial** integrado. Al agente se le habla en español, como a un
-compañero de equipo, y él:
+| Herramienta | Tipo de prueba | Carpeta | Estado |
+|---|---|---|---|
+| [Playwright](https://playwright.dev/) | Funcional (navegador) | [tests/](tests/) | ✅ Implementada |
+| [Cypress](https://www.cypress.io/) | Funcional (navegador) | [cypress/e2e/](cypress/e2e/) | ✅ Implementada |
+| [Selenium](https://www.selenium.dev/) | Funcional (navegador) | [selenium/tests/](selenium/tests/) | ✅ Implementada |
+| [Katalon](https://katalon.com/) | Funcional (herramienta visual) | — | 🕒 Planificada |
+| [JMeter](https://jmeter.apache.org/) | Carga y rendimiento | — | 🕒 Planificada |
 
-- **Escribe** el código de los tests.
-- **Abre el navegador** y recorre la aplicación para encontrar botones, campos y mensajes.
-- **Ejecuta** los tests y muestra el resultado.
-- **Deja evidencia**: capturas, grabaciones y un plan de lo que hizo, para que una persona lo revise.
+## Agente de IA: Antigravity
 
-> Explicación para autoridades y no técnicos: [Antigravity aplicado a QA y Testing](docs/antigravity-para-testing.md).
+**Antigravity** es un entorno de desarrollo de Google con un **agente de IA** integrado. A
+diferencia de un asistente de chat, el agente **ejecuta tareas**:
 
-## Cómo lo uso como tester senior
+- **Explora** la aplicación en el navegador para identificar campos, botones y mensajes.
+- **Escribe** el código de los tests en la herramienta indicada.
+- **Ejecuta** los tests y reporta los resultados.
+- **Deja evidencia** (capturas, grabaciones y plan de trabajo) para la revisión del equipo.
 
-La IA no decide qué probar: **eso lo define el tester**. La IA hace el trabajo de programar.
-Mi flujo de trabajo para cada caso es este:
+> Explicación para áreas no técnicas: [Antigravity aplicado a QA y Testing](docs/antigravity-para-testing.md).
 
-| Paso | Quién | Qué se hace |
+## Flujo de trabajo: QA + agente de IA
+
+El equipo de QA define **qué** se prueba y **cuál** es el resultado esperado; el agente se
+encarga de la implementación. Ningún test se incorpora sin revisión del equipo de QA.
+
+| Paso | Responsable | Actividad |
 |---|---|---|
-| 1. Diseñar el caso | Tester | Defino ID, pasos y resultado esperado, como en cualquier caso de prueba manual |
-| 2. Registrarlo | Tester | Lo cargo en el [tablero de GitHub](#tablero-de-seguimiento) en **Todo** |
-| 3. Pedirlo | Tester → IA | Completo la [plantilla](prompts/plantilla-requerimiento.md) y la adjunto en el chat del agente |
-| 4. Explorar y programar | IA | El agente navega la app, encuentra los elementos y escribe el test |
-| 5. Revisar | Tester | Corro `npm run test:headed`, miro la ejecución y verifico que el test pruebe lo que pedí |
-| 6. Guardar | Tester | Commit con `Closes #N`: el caso pasa solo a **Done** en el tablero |
+| 1. Diseño del caso | QA | Definición de ID, precondiciones, pasos y resultado esperado |
+| 2. Registro | QA | Alta del caso en el [tablero de seguimiento](#tablero-de-seguimiento) en **Todo** |
+| 3. Solicitud | QA → Agente | Se completa la [plantilla de requerimiento](prompts/plantilla-requerimiento.md) y se adjunta al agente |
+| 4. Implementación | Agente | Exploración de la aplicación, desarrollo y ejecución de los tests |
+| 5. Revisión | QA | Ejecución supervisada y validación de que el test cubre el resultado esperado |
+| 6. Integración | QA | Commit con `Closes #N`; el caso pasa automáticamente a **Done** |
 
-**Qué reviso siempre antes de aprobar un test hecho por IA:**
+### Criterios de revisión de tests generados por IA
 
-- Que verifique el **resultado esperado** real y no solo que "la página cargó".
-- Que **falle** cuando tiene que fallar (por ejemplo, cambiando la contraseña a una incorrecta).
-- Que **no** tenga usuarios ni contraseñas escritos en el código: van siempre en `.env`.
-- Que el ID y el nombre del test coincidan con el caso del tablero.
+- El test valida el **resultado esperado** del caso, no solo la carga de la página.
+- El test **falla** ante un comportamiento incorrecto (por ejemplo, una contraseña inválida).
+- No hay credenciales en el código: se toman siempre de `.env`.
+- El ID y el nombre del test coinciden con el caso del tablero.
 
-### Prompt plantilla para crear un caso
+### Plantilla de requerimiento
 
-Los prompts se guardan como archivos en la carpeta [prompts/](prompts/), para adjuntarlos en
-el chat del agente:
+Cada requerimiento se documenta como un archivo en [prompts/](prompts/) y se adjunta al agente:
 
-| Archivo | Para qué |
+| Archivo | Uso |
 |---|---|
-| [prompts/plantilla-requerimiento.md](prompts/plantilla-requerimiento.md) | Plantilla vacía: se copia y se completa con cada requerimiento nuevo |
-| [prompts/LOGIN-02.md](prompts/LOGIN-02.md) | Ejemplo completo: login con contraseña incorrecta |
+| [prompts/plantilla-requerimiento.md](prompts/plantilla-requerimiento.md) | Plantilla base para cada requerimiento nuevo |
+| [prompts/LOGIN-02.md](prompts/LOGIN-02.md) | Ejemplo: login con credenciales inválidas |
 
-Con cada requerimiento, el agente devuelve: archivos modificados, comandos para ejecutar los
-tests por consola, reporte de casos, explicación simple y un **resumen para la líder**.
+Por cada requerimiento el agente entrega: archivos modificados, comandos de ejecución, reporte
+de casos, explicación funcional de cada test y un **resumen ejecutivo para la líder del equipo**.
 
 > Para crear el pipeline de CI con IA, ver [Guía: crear el CI con IA](docs/guia-ci-con-ia.md).
 
-## Casos automatizados
+## Casos automatizados – ANPR
 
-| ID | Caso | Archivo | Issue |
+| ID | Caso | Playwright | Cypress | Selenium | Issue |
+|---|---|---|---|---|---|
+| SMOKE-01 | La página de login abre en Chrome | ✅ | ✅ | ✅ | #1 |
+| LOGIN-01 | Login exitoso con usuario válido | ✅ | ✅ | ✅ | #2 |
+| LOGIN-02 | Login con contraseña incorrecta muestra el mensaje de error exacto | ✅ | ✅ | ✅ | #4 |
+| LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | ✅ | ✅ | ✅ | #4 |
+| LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | ✅ | ✅ | ✅ | #3 |
+
+## Comparación de herramientas
+
+`npm run comparar` ejecuta los mismos casos en cada herramienta (mismo Chrome, sin ventana
+visible, un test por vez) y genera un reporte HTML con tiempos totales, tiempo por caso e
+historial de ejecuciones.
+
+Última medición (5 casos de ANPR):
+
+| Herramienta | Preparación | Ejecución de tests | **Total** |
 |---|---|---|---|
-| SMOKE-01 | La página de login abre en Chrome | [tests/smoke.spec.ts](tests/smoke.spec.ts) | #1 |
-| LOGIN-01 | Login exitoso con usuario válido | [tests/login.spec.ts](tests/login.spec.ts) | #2 |
-| LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | [tests/login.spec.ts](tests/login.spec.ts) | #3 |
-| LOGIN-02 | Login con contraseña incorrecta muestra el mensaje de error exacto | [tests/login.spec.ts](tests/login.spec.ts) | #4 |
-| LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | [tests/login.spec.ts](tests/login.spec.ts) | #4 |
+| Playwright | 5,7 s | 17,3 s | **23,0 s** |
+| Selenium | 18,9 s | 12,2 s | **31,1 s** |
+| Cypress | 30,6 s | 11,7 s | **42,2 s** |
+
+La ejecución de los casos es similar en las tres herramientas; la diferencia está en el tiempo
+de preparación (arranque de la herramienta y del navegador).
+
+**Observaciones técnicas:**
+
+- **Cypress** no puede seguir la redirección de `https` a `http` que hace ANPR al acceder sin
+  sesión; esa validación se resuelve con una consulta directa al servidor.
+- **Selenium** requiere un navegador nuevo por caso para aislar la sesión, y los enlaces del
+  menú de usuario de ANPR no responden a su click nativo (se usa click por JavaScript).
+- **Playwright** ejecutó todos los casos sin adaptaciones.
 
 ## Tablero de seguimiento
 
@@ -76,14 +109,14 @@ Cada caso es un *issue* con su estado (**Todo**, **In Progress**, **Done**) y el
 | Producto | Estado |
 |---|---|
 | ANPR | En curso |
-| Biblioteca Digital | Próximamente |
-| Reconocimiento Facial Mendoza | Próximamente |
-| AS | Próximamente |
-| VMS | Próximamente |
+| Biblioteca Digital | Planificado |
+| Reconocimiento Facial Mendoza | Planificado |
+| AS | Planificado |
+| VMS | Planificado |
 
 ## Requisitos
 
-- [Node.js](https://nodejs.org/) 20 o superior
+- [Node.js](https://nodejs.org/) 22 o superior
 - Google Chrome instalado
 - Acceso a la red interna donde está el ambiente de testing
 
@@ -105,22 +138,37 @@ APP_PASSWORD=<contraseña>
 
 ## Cómo ejecutar los tests
 
-| Comando | Qué hace |
-|---|---|
-| `npm test` | Corre todos los tests sin mostrar el navegador |
-| `npm run test:headed` | Corre los tests de a uno, con Chrome visible y maximizado |
-| `npm run report` | Abre el reporte HTML de la última ejecución |
+| Herramienta | Comando | Qué hace |
+|---|---|---|
+| Playwright | `npm test` | Corre todos los tests sin mostrar el navegador |
+| Playwright | `npm run test:headed` | Corre los tests de a uno, con Chrome visible y maximizado |
+| Playwright | `npm run report` | Abre el reporte HTML de la última ejecución |
+| Cypress | `npm run cy:run` | Corre todos los tests sin mostrar el navegador |
+| Cypress | `npm run cy:headed` | Corre los tests con Chrome visible |
+| Cypress | `npm run cy:open` | Abre la ventana de Cypress para elegir y ver los tests |
+| Cypress | `npm run cy:report` | Abre el reporte HTML de la última ejecución |
+| Selenium | `npm run se:run` | Corre todos los tests sin mostrar el navegador |
+| Selenium | `npm run se:headed` | Corre los tests con Chrome visible y maximizado |
+| Selenium | `npm run se:report` | Abre el reporte HTML de la última ejecución |
+| Todas | `npm run comparar` | Corre los mismos casos en cada herramienta y abre una página con la comparación de tiempos |
+| Todas | `npm run comparar:ver` | Vuelve a abrir la última comparación |
 
 Cuando un test falla, el reporte guarda captura de pantalla, video y traza para analizar el error.
 
 ## Estructura del proyecto
 
 ```
-tests/                  Casos de prueba automatizados
+tests/                  Casos de prueba automatizados con Playwright
+cypress/e2e/            Los mismos casos automatizados con Cypress
+selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
+scripts/                Scripts de apoyo (lanzadores, comparación de herramientas)
+reports/                Comparación de tiempos generada por `npm run comparar` (no se sube)
 docs/                   Documentación del workshop
 prompts/                Prompts para el agente de IA (uno por requerimiento)
 .github/workflows/      Pipelines de CI y releases
 playwright.config.ts    Configuración de Playwright (navegador, reportes, evidencias)
+cypress.config.ts       Configuración de Cypress
+.mocharc.json           Configuración de Mocha para Selenium
 .env.example            Plantilla de variables del ambiente
 CHANGELOG.md            Historial de versiones
 ```
@@ -129,9 +177,9 @@ CHANGELOG.md            Historial de versiones
 
 El pipeline [.github/workflows/ci.yml](.github/workflows/ci.yml) tiene dos etapas:
 
-1. **Validación** (en cada push y pull request): instala dependencias y verifica que todos los
-   tests compilen y se puedan listar. Corre en los servidores de GitHub.
-2. **Tests end-to-end**: ejecuta los tests contra el ambiente de testing. Como ese ambiente
+1. **Validación** (en cada push y pull request): instala dependencias y verifica que los tests
+   de Playwright, Cypress y Selenium compilen. Corre en los servidores de GitHub.
+2. **Tests end-to-end**: ejecuta los tests de Playwright contra el ambiente de testing. Como ese ambiente
    está en la red interna, esta etapa necesita un *self-hosted runner* (un equipo de la red
    interna registrado en GitHub). Queda desactivada hasta que se configure:
    - Registrar el runner en *Settings → Actions → Runners*.
