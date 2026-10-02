@@ -9,3 +9,13 @@ node_modules/
 
 # Secrets
 .env
+
+# Cypress
+/cypress/screenshots/
+/cypress/videos/
+/cypress/downloads/
+/cypress/reports/
+
+# Comparación de herramientas
+/reports/
+/selenium/reports/

@@ -1,7 +1,7 @@
 {
   "name": "qa-ai-workshop",
   "version": "1.2.0",
-  "description": "QA automation workshop using Playwright, AI and Antigravity",
+  "description": "Automatización de pruebas con agentes de IA sobre Playwright, Cypress y Selenium",
   "keywords": [
     "qa",
     "testing",
@@ -23,11 +23,29 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed --workers=1",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "cy:run": "node scripts/cypress.cjs run --browser chrome",
+    "cy:headed": "node scripts/cypress.cjs run --browser chrome --headed",
+    "cy:open": "node scripts/cypress.cjs open",
+    "cy:report": "node scripts/abrir.cjs cypress/reports/index.html",
+    "se:run": "node scripts/selenium.cjs",
+    "se:headed": "node scripts/selenium.cjs --headed",
+    "se:report": "node scripts/abrir.cjs selenium/reports/index.html",
+    "comparar": "node scripts/comparar.cjs && node scripts/abrir.cjs reports/comparacion.html",
+    "comparar:ver": "node scripts/abrir.cjs reports/comparacion.html"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
-    "@types/node": "^26.6.4"
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.6.4",
+    "@types/selenium-webdriver": "^4.35.7",
+    "cypress": "^16.1.1",
+    "cypress-mochawesome-reporter": "^5.0.0",
+    "mocha": "^12.0.3",
+    "mochawesome": "^8.1.1",
+    "selenium-webdriver": "^4.50.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "dotenv": "^18.0.5"
