@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validar tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Compila todos los tests y los lista, sin ejecutarlos
+      - run: npx playwright test --list
+
+  e2e:
+    name: Tests end-to-end
+    needs: validate
+    # El ambiente de testing está en la red interna: requiere un self-hosted runner.
+    # Se activa cargando la variable E2E_ENABLED=true en el repositorio.
+    if: vars.E2E_ENABLED == 'true'
+    runs-on: self-hosted
+    env:
+      CI: true
+      BASE_URL: ${{ vars.BASE_URL }}
+      APP_USER: ${{ secrets.APP_USER }}
+      APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
