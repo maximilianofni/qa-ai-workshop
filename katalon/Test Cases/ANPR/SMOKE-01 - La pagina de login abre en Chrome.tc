@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>La página de login abre en Chrome</description>
+   <name>SMOKE-01 - La pagina de login abre en Chrome</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>a1f0c2d4-0001-4a6b-9c11-5e2f3a4b5c01</testCaseGuid>
+</TestCaseEntity>

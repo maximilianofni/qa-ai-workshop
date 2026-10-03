@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Login exitoso con usuario válido</description>
+   <name>LOGIN-01 - Login exitoso con usuario valido</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>a1f0c2d4-0002-4a6b-9c11-5e2f3a4b5c02</testCaseGuid>
+</TestCaseEntity>

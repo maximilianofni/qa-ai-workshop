@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GlobalVariableEntities>
+   <description>Los valores se cargan desde el .env del repositorio al ejecutar (npm run ka:run)</description>
+   <name>default</name>
+   <tag></tag>
+   <defaultProfile>true</defaultProfile>
+   <GlobalVariableEntity>
+      <description>URL del ambiente de testing</description>
+      <initValueType>String</initValueType>
+      <name>BASE_URL</name>
+      <initValue>''</initValue>
+   </GlobalVariableEntity>
+   <GlobalVariableEntity>
+      <description>Usuario de testing</description>
+      <initValueType>String</initValueType>
+      <name>APP_USER</name>
+      <initValue>''</initValue>
+   </GlobalVariableEntity>
+   <GlobalVariableEntity>
+      <description>Contraseña de testing</description>
+      <initValueType>String</initValueType>
+      <name>APP_PASSWORD</name>
+      <initValue>''</initValue>
+   </GlobalVariableEntity>
+</GlobalVariableEntities>

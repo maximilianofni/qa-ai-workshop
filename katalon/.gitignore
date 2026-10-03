@@ -1,0 +1,23 @@
+.gradle
+
+bin
+
+Reports
+
+Libs
+
+output
+
+!output/.gitkeep
+build
+
+.classpath
+
+.project
+
+.cache
+
+.settings
+
+# Configuración local de Katalon (puede incluir datos personales, como el mail)
+settings/internal

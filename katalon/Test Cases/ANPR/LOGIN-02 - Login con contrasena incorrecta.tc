@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description>Login con contraseña incorrecta</description>
+   <name>LOGIN-02 - Login con contrasena incorrecta</name>
+   <tag></tag>
+   <comment></comment>
+   <recordOption>OTHER</recordOption>
+   <testCaseGuid>a1f0c2d4-0003-4a6b-9c11-5e2f3a4b5c03</testCaseGuid>
+</TestCaseEntity>
