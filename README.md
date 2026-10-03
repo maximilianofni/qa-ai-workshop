@@ -14,7 +14,7 @@ automatización** para compararlas en condiciones reales, empezando por la aplic
 | [Playwright](https://playwright.dev/) | Funcional (navegador) | [tests/](tests/) | ✅ Implementada |
 | [Cypress](https://www.cypress.io/) | Funcional (navegador) | [cypress/e2e/](cypress/e2e/) | ✅ Implementada |
 | [Selenium](https://www.selenium.dev/) | Funcional (navegador) | [selenium/tests/](selenium/tests/) | ✅ Implementada |
-| [Katalon](https://katalon.com/) | Funcional (herramienta visual) | — | 🕒 Planificada |
+| [Katalon](https://katalon.com/) | Funcional (herramienta visual) | [katalon/](katalon/) | ✅ Implementada (ejecución desde el IDE) |
 | [JMeter](https://jmeter.apache.org/) | Carga y rendimiento | — | 🕒 Planificada |
 
 ## Agente de IA: Antigravity
@@ -66,30 +66,33 @@ de casos, explicación funcional de cada test y un **resumen ejecutivo para la l
 
 ## Casos automatizados – ANPR
 
-| ID | Caso | Playwright | Cypress | Selenium | Issue |
-|---|---|---|---|---|---|
-| SMOKE-01 | La página de login abre en Chrome | ✅ | ✅ | ✅ | #1 |
-| LOGIN-01 | Login exitoso con usuario válido | ✅ | ✅ | ✅ | #2 |
-| LOGIN-02 | Login con contraseña incorrecta muestra el mensaje de error exacto | ✅ | ✅ | ✅ | #4 |
-| LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | ✅ | ✅ | ✅ | #4 |
-| LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | ✅ | ✅ | ✅ | #3 |
+| ID | Caso | Playwright | Cypress | Selenium | Katalon | Issue |
+|---|---|---|---|---|---|---|
+| SMOKE-01 | La página de login abre en Chrome | ✅ | ✅ | ✅ | ✅ | #1 |
+| LOGIN-01 | Login exitoso con usuario válido | ✅ | ✅ | ✅ | ✅ | #2 |
+| LOGIN-02 | Login con contraseña incorrecta muestra el mensaje de error exacto | ✅ | ✅ | ✅ | ✅ | #4 |
+| LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | ✅ | ✅ | ✅ | ✅ | #4 |
+| LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | ✅ | ✅ | ✅ | ✅ | #3 |
 
 ## Comparación de herramientas
 
 `npm run comparar` ejecuta los mismos casos en cada herramienta (mismo Chrome, sin ventana
 visible, un test por vez) y genera un reporte HTML con tiempos totales, tiempo por caso e
-historial de ejecuciones.
+historial de ejecuciones. Katalon se incorpora desde su último reporte del IDE (ver
+observaciones).
 
-Última medición (5 casos de ANPR):
+Mediciones de referencia (5 casos de ANPR; los valores varían entre ejecuciones según la
+carga de la máquina y del ambiente):
 
-| Herramienta | Preparación | Ejecución de tests | **Total** |
-|---|---|---|---|
-| Playwright | 5,7 s | 17,3 s | **23,0 s** |
-| Selenium | 18,9 s | 12,2 s | **31,1 s** |
-| Cypress | 30,6 s | 11,7 s | **42,2 s** |
+| Herramienta | Total | Observación |
+|---|---|---|
+| Playwright | **23 a 33 s** | La más rápida en todas las mediciones |
+| Selenium | **31 a 34 s** | Un navegador nuevo por caso |
+| Cypress | **42 a 44 s** | Mayor tiempo de arranque |
+| Katalon | **55 s** | Desde el IDE; cada caso abre Chrome |
 
-La ejecución de los casos es similar en las tres herramientas; la diferencia está en el tiempo
-de preparación (arranque de la herramienta y del navegador).
+La ejecución de los casos en sí es similar entre herramientas; la diferencia principal está
+en el tiempo de preparación (arranque de la herramienta y del navegador).
 
 **Observaciones técnicas:**
 
@@ -97,7 +100,16 @@ de preparación (arranque de la herramienta y del navegador).
   sesión; esa validación se resuelve con una consulta directa al servidor.
 - **Selenium** requiere un navegador nuevo por caso para aislar la sesión, y los enlaces del
   menú de usuario de ANPR no responden a su click nativo (se usa click por JavaScript).
+- **Katalon** usa Selenium internamente y requirió el mismo click por JavaScript. Su
+  ejecución por consola (`katalonc`), necesaria para CI, **requiere licencia paga de Katalon
+  Runtime Engine**; sin ella solo puede ejecutarse desde el IDE.
 - **Playwright** ejecutó todos los casos sin adaptaciones.
+
+| Criterio | Playwright | Cypress | Selenium | Katalon |
+|---|---|---|---|---|
+| Licencia para ejecutar por consola / CI | Gratuita | Gratuita | Gratuita | Paga (KRE) |
+| Adaptaciones necesarias en ANPR | Ninguna | Redirección https → http | Sesión y clicks | Clicks |
+| Reporte HTML incluido | Sí | Con plugin | Con plugin | Sí |
 
 ## Tablero de seguimiento
 
@@ -132,7 +144,11 @@ Después copiá `.env.example` a `.env` y completá el usuario y la contraseña 
 BASE_URL=https://nginx-central-anpr.testing.docker.dev-dnd.com/www/
 APP_USER=<usuario>
 APP_PASSWORD=<contraseña>
+KATALON_API_KEY=<API key de Katalon, solo para ejecutar Katalon por consola>
 ```
+
+Katalon toma las credenciales del mismo `.env` (también al ejecutar desde el IDE), por lo que
+el proyecto de Katalon no guarda usuario ni contraseña.
 
 > El archivo `.env` **nunca se sube al repositorio** (está en `.gitignore`).
 
@@ -150,6 +166,9 @@ APP_PASSWORD=<contraseña>
 | Selenium | `npm run se:run` | Corre todos los tests sin mostrar el navegador |
 | Selenium | `npm run se:headed` | Corre los tests con Chrome visible y maximizado |
 | Selenium | `npm run se:report` | Abre el reporte HTML de la última ejecución |
+| Katalon | `npm run ka:run` | Corre la suite por consola (requiere licencia KRE) |
+| Katalon | `npm run ka:headed` | Ídem, con Chrome visible (requiere licencia KRE) |
+| Katalon | `npm run ka:report` | Abre el último reporte HTML, incluidos los generados desde el IDE |
 | Todas | `npm run comparar` | Corre los mismos casos en cada herramienta y abre una página con la comparación de tiempos |
 | Todas | `npm run comparar:ver` | Vuelve a abrir la última comparación |
 
@@ -161,6 +180,7 @@ Cuando un test falla, el reporte guarda captura de pantalla, video y traza para 
 tests/                  Casos de prueba automatizados con Playwright
 cypress/e2e/            Los mismos casos automatizados con Cypress
 selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
+katalon/                Proyecto Katalon Studio con los mismos casos (abrir ANPR.prj desde el IDE)
 scripts/                Scripts de apoyo (lanzadores, comparación de herramientas)
 reports/                Comparación de tiempos generada por `npm run comparar` (no se sube)
 docs/                   Documentación del workshop
