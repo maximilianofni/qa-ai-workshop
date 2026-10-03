@@ -4,6 +4,18 @@ Todos los cambios relevantes del proyecto se registran en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [1.4.0] - 2026-10-02
+
+### Agregado
+- Casos de ANPR (SMOKE-01, LOGIN-01, LOGIN-02, LOGIN-03, LOGOUT-01) en **Katalon Studio**,
+  con credenciales tomadas del `.env`.
+- Comandos `ka:run`, `ka:headed` (requieren licencia KRE) y `ka:report`.
+- Katalon en la comparación de herramientas, a partir del último reporte del IDE.
+- README: tabla de criterios entre herramientas (licencia, adaptaciones, reportes).
+
+### Cambiado
+- Comparación de herramientas: horas en formato de 24 horas.
+
 ## [1.3.0] - 2026-10-02
 
 ### Agregado
@@ -43,6 +55,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - LOGIN-01: login exitoso con usuario válido.
 - LOGOUT-01: cerrar sesión vuelve al login y bloquea el acceso al panel.
 
+[1.4.0]: https://github.com/maximilianofni/qa-ai-workshop/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/maximilianofni/qa-ai-workshop/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/maximilianofni/qa-ai-workshop/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/maximilianofni/qa-ai-workshop/compare/v1.0.0...v1.1.0

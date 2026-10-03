@@ -1,6 +1,6 @@
 {
   "name": "qa-ai-workshop",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Automatización de pruebas con agentes de IA sobre Playwright, Cypress, Selenium y Katalon",
   "keywords": [
     "qa",
