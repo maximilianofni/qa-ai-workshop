@@ -1,7 +1,7 @@
 // Ejecuta los mismos casos en cada herramienta, mide los tiempos y genera
 // reports/comparacion.html (con historial en reports/historial.json).
 //
-// Para sumar una herramienta nueva (por ejemplo Katalon), agregar un bloque en HERRAMIENTAS
+// Para sumar una herramienta nueva (por ejemplo JMeter), agregar un bloque en HERRAMIENTAS
 // con una función que devuelva { casos: [{ id, nombre, ms, paso }] }.
 
 const { spawnSync } = require('child_process');
@@ -78,15 +78,61 @@ const HERRAMIENTAS = [
       return { casos };
     },
   },
+  {
+    id: 'katalon',
+    nombre: 'Katalon',
+    // La ejecución por consola (katalonc) requiere licencia paga de Katalon Runtime Engine.
+    // Mientras no haya licencia, se toma el último reporte ejecutado desde el IDE.
+    leerUltimoReporte() {
+      const reportes = [];
+      const buscar = (dir) => {
+        if (!fs.existsSync(dir)) return;
+        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+          const ruta = path.join(dir, e.name);
+          if (e.isDirectory()) buscar(ruta);
+          else if (e.name === 'JUnit_Report.xml') reportes.push(ruta);
+        }
+      };
+      buscar(path.join(RAIZ, 'katalon', 'Reports'));
+      const ultimo = reportes.sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs).at(-1);
+      if (!ultimo) return null;
+
+      const xml = fs.readFileSync(ultimo, 'utf-8');
+      const casos = [...xml.matchAll(/<testcase name="([^"]+)" time="([\d.]+)"[^>]*status="(\w+)"/g)].map(([, titulo, seg, estado]) => {
+        const nombre = titulo.replace(/^Test Cases\/(?:[^/]+\/)*/, '');
+        const [, id, resto] = nombre.match(/^([A-Z]+-\d+)\s*-\s*(.*)$/) ?? [null, nombre, nombre];
+        return { id, nombre: resto, ms: Math.round(Number(seg) * 1000), paso: estado === 'PASSED' };
+      });
+      const totalMs = Math.round(Number(xml.match(/<testsuites[^>]* time="([\d.]+)"/)?.[1] ?? 0) * 1000);
+      const fecha = new Date(xml.match(/timestamp="([^"]+)"/)?.[1] ?? fs.statSync(ultimo).mtime);
+      return {
+        casos,
+        totalMs,
+        nota: `ejecutado desde el IDE el ${fecha.toLocaleString('es-AR', { hour12: false })} (por consola requiere licencia paga). `
+          + 'No incluye el arranque de Katalon; cada caso incluye abrir Chrome.',
+      };
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
 
 function medir(herramienta) {
-  console.log(`\n▶ Ejecutando ${herramienta.nombre}...\n`);
-  const inicio = Date.now();
-  const { casos } = herramienta.correr();
-  const totalMs = Date.now() - inicio;
+  let casos, totalMs, nota;
+  if (herramienta.leerUltimoReporte) {
+    console.log(`\n▶ Leyendo el último reporte de ${herramienta.nombre}...\n`);
+    const reporte = herramienta.leerUltimoReporte();
+    if (!reporte) {
+      console.log(`  No hay reportes de ${herramienta.nombre}; se omite.`);
+      return null;
+    }
+    ({ casos, totalMs, nota } = reporte);
+  } else {
+    console.log(`\n▶ Ejecutando ${herramienta.nombre}...\n`);
+    const inicio = Date.now();
+    ({ casos } = herramienta.correr());
+    totalMs = Date.now() - inicio;
+  }
   const testsMs = casos.reduce((s, c) => s + c.ms, 0);
   return {
     id: herramienta.id,
@@ -97,6 +143,7 @@ function medir(herramienta) {
     pasaron: casos.filter((c) => c.paso).length,
     total: casos.length,
     casos,
+    nota,
   };
 }
 
@@ -113,17 +160,20 @@ function generarHtml(corrida, historial) {
 
   const tiles = resultados.map((r) => `
     <div class="tile">
-      <div class="tile-label">${esc(r.nombre)}</div>
+      <div class="tile-label">${esc(r.nombre)}${r.nota ? ' *' : ''}</div>
       <div class="tile-value">${seg(r.totalMs)}</div>
       <div class="tile-sub">${r.pasaron} de ${r.total} casos pasaron${r.pasaron < r.total ? ' <span class="fail">✗ hay fallas</span>' : ''}</div>
     </div>`).join('');
+
+  const notas = resultados.filter((r) => r.nota)
+    .map((r) => `<p class="note">* <strong>${esc(r.nombre)}</strong>: ${esc(r.nota)}</p>`).join('');
 
   const barras = resultados.map((r) => {
     const pTests = (r.testsMs / maxMs) * 100;
     const pPrep = (r.preparacionMs / maxMs) * 100;
     return `
     <div class="bar-row">
-      <div class="bar-name">${esc(r.nombre)}</div>
+      <div class="bar-name">${esc(r.nombre)}${r.nota ? ' *' : ''}</div>
       <div class="bar-track">
         <div class="seg seg-tests" style="width:${pTests}%" data-tip="${esc(r.nombre)} · Tests: ${seg(r.testsMs)}"></div>
         <div class="seg seg-prep" style="width:${pPrep}%" data-tip="${esc(r.nombre)} · Preparación: ${seg(r.preparacionMs)}"></div>
@@ -150,7 +200,7 @@ function generarHtml(corrida, historial) {
 
   const herramientasHist = [...new Set(historial.flatMap((h) => h.resultados.map((r) => r.nombre)))];
   const filasHist = [...historial].reverse().map((h) => `
-    <tr><td>${esc(new Date(h.fecha).toLocaleString('es-AR'))}</td>${herramientasHist.map((n) => {
+    <tr><td>${esc(new Date(h.fecha).toLocaleString('es-AR', { hour12: false }))}</td>${herramientasHist.map((n) => {
       const r = h.resultados.find((x) => x.nombre === n);
       return `<td class="num">${r ? seg(r.totalMs) : '—'}</td>`;
     }).join('')}</tr>`).join('');
@@ -229,7 +279,7 @@ function generarHtml(corrida, historial) {
 <body>
 <main>
   <h1>Comparación de herramientas – ANPR</h1>
-  <p class="meta">Ejecución del ${esc(new Date(fecha).toLocaleString('es-AR'))} · mismos casos, mismo Chrome, sin ventana visible, un test por vez.</p>
+  <p class="meta">Ejecución del ${esc(new Date(fecha).toLocaleString('es-AR', { hour12: false }))} · mismos casos, mismo Chrome, sin ventana visible, un test por vez.</p>
 
   <div class="tiles">${tiles}</div>
 
@@ -244,6 +294,7 @@ function generarHtml(corrida, historial) {
     </div>
     ${barras}
     <p class="note">Pasá el mouse sobre cada parte de la barra para ver el detalle.</p>
+    ${notas}
   </section>
 
   <section class="card">
@@ -291,7 +342,7 @@ function generarHtml(corrida, historial) {
 
 fs.mkdirSync(TMP, { recursive: true });
 
-const resultados = HERRAMIENTAS.map(medir);
+const resultados = HERRAMIENTAS.map(medir).filter(Boolean);
 const corrida = { fecha: new Date().toISOString(), resultados };
 
 let historial = [];

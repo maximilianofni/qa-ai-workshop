@@ -1,7 +1,7 @@
 {
   "name": "qa-ai-workshop",
   "version": "1.3.0",
-  "description": "Automatización de pruebas con agentes de IA sobre Playwright, Cypress y Selenium",
+  "description": "Automatización de pruebas con agentes de IA sobre Playwright, Cypress, Selenium y Katalon",
   "keywords": [
     "qa",
     "testing",
@@ -31,6 +31,9 @@
     "se:run": "node scripts/selenium.cjs",
     "se:headed": "node scripts/selenium.cjs --headed",
     "se:report": "node scripts/abrir.cjs selenium/reports/index.html",
+    "ka:run": "node scripts/katalon.cjs",
+    "ka:headed": "node scripts/katalon.cjs --headed",
+    "ka:report": "node scripts/katalon.cjs --reporte",
     "comparar": "node scripts/comparar.cjs && node scripts/abrir.cjs reports/comparacion.html",
     "comparar:ver": "node scripts/abrir.cjs reports/comparacion.html"
   },
