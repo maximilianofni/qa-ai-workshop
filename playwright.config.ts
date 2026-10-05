@@ -34,13 +34,19 @@ export default defineConfig({
   projects: [
     {
       name: 'anpr',
-      testIgnore: 'biblioteca-digital/**',
+      testDir: './tests/anpr',
       use: { ...chrome, baseURL: process.env.BASE_URL },
     },
     {
       name: 'biblioteca-digital',
       testDir: './tests/biblioteca-digital',
       use: { ...chrome, baseURL: process.env.BD_BASE_URL },
+    },
+    {
+      // Servidor de analíticas: los tests se conectan por SSH y abren el visor de patentes
+      name: 'as',
+      testDir: './tests/as',
+      use: { ...chrome },
     },
   ],
 });
