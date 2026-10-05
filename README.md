@@ -74,6 +74,19 @@ de casos, explicación funcional de cada test y un **resumen ejecutivo para la l
 | LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | ✅ | ✅ | ✅ | ✅ | #4 |
 | LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | ✅ | ✅ | ✅ | ✅ | #3 |
 
+## Casos automatizados – Biblioteca Digital
+
+Biblioteca Digital no tiene login propio: al entrar redirige al **autenticador** de UltraIP
+(`authenticator.testing.deploy.danaide.com.ar`), y después del login vuelve a la app.
+
+| ID | Caso | Playwright | Cypress | Selenium | Katalon |
+|---|---|---|---|---|---|
+| BD-SMOKE-01 | La app redirige al login del autenticador | ✅ | – | – | – |
+| BD-LOGIN-01 | Login exitoso con usuario válido | ✅ | – | – | – |
+| BD-LOGIN-02 | Login con contraseña incorrecta muestra la alerta "Error" con "Usuario o contraseña inválidos" | ✅ | – | – | – |
+| BD-LOGIN-03 | Login con campos vacíos muestra "Este campo es requerido" debajo de cada campo | ✅ | – | – | – |
+| BD-LOGOUT-01 | Cerrar sesión vuelve al login y la app vuelve a pedir credenciales | ✅ | – | – | – |
+
 ## Comparación de herramientas
 
 `npm run comparar` ejecuta los mismos casos en cada herramienta (mismo Chrome, sin ventana
@@ -121,7 +134,7 @@ Cada caso es un *issue* con su estado (**Todo**, **In Progress**, **Done**) y el
 | Producto | Estado |
 |---|---|
 | ANPR | En curso |
-| Biblioteca Digital | Planificado |
+| Biblioteca Digital | En curso |
 | Reconocimiento Facial Mendoza | Planificado |
 | AS | Planificado |
 | VMS | Planificado |
@@ -144,6 +157,9 @@ Después copiá `.env.example` a `.env` y completá el usuario y la contraseña 
 BASE_URL=https://nginx-central-anpr.testing.docker.dev-dnd.com/www/
 APP_USER=<usuario>
 APP_PASSWORD=<contraseña>
+BD_BASE_URL=http://vms-extractions-web.testing.deploy.danaide.com.ar/
+BD_USER=<usuario de Biblioteca Digital>
+BD_PASSWORD=<contraseña de Biblioteca Digital>
 KATALON_API_KEY=<API key de Katalon, solo para ejecutar Katalon por consola>
 ```
 
@@ -152,12 +168,25 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 
 > El archivo `.env` **nunca se sube al repositorio** (está en `.gitignore`).
 
+### Problemas comunes en Windows
+
+- **`npm` no se reconoce como comando:** Node.js se instaló con la terminal (o VS Code) abierta.
+  Cerrar VS Code por completo y volver a abrirlo.
+- **"La ejecución de scripts está deshabilitada en este sistema":** PowerShell bloquea `npm`.
+  Ejecutar una sola vez y abrir una terminal nueva:
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  ```
+  Otra opción, sin cambiar la configuración, es usar `npm.cmd` en lugar de `npm`.
+
 ## Cómo ejecutar los tests
 
 | Herramienta | Comando | Qué hace |
 |---|---|---|
 | Playwright | `npm test` | Corre todos los tests sin mostrar el navegador |
 | Playwright | `npm run test:headed` | Corre los tests de a uno, con Chrome visible y maximizado |
+| Playwright | `npm run test:anpr` | Corre solo los tests de ANPR |
+| Playwright | `npm run test:bd` | Corre solo los tests de Biblioteca Digital |
 | Playwright | `npm run report` | Abre el reporte HTML de la última ejecución |
 | Cypress | `npm run cy:run` | Corre todos los tests sin mostrar el navegador |
 | Cypress | `npm run cy:headed` | Corre los tests con Chrome visible |
@@ -177,7 +206,8 @@ Cuando un test falla, el reporte guarda captura de pantalla, video y traza para 
 ## Estructura del proyecto
 
 ```
-tests/                  Casos de prueba automatizados con Playwright
+tests/                  Casos de prueba automatizados con Playwright (ANPR)
+tests/biblioteca-digital/  Casos de Biblioteca Digital con Playwright
 cypress/e2e/            Los mismos casos automatizados con Cypress
 selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
 katalon/                Proyecto Katalon Studio con los mismos casos (abrir ANPR.prj desde el IDE)
@@ -203,8 +233,8 @@ El pipeline [.github/workflows/ci.yml](.github/workflows/ci.yml) tiene dos etapa
    está en la red interna, esta etapa necesita un *self-hosted runner* (un equipo de la red
    interna registrado en GitHub). Queda desactivada hasta que se configure:
    - Registrar el runner en *Settings → Actions → Runners*.
-   - Cargar la variable `BASE_URL` y la variable `E2E_ENABLED=true` en *Settings → Secrets and variables → Actions → Variables*.
-   - Cargar los secretos `APP_USER` y `APP_PASSWORD` en *Settings → Secrets and variables → Actions → Secrets*.
+   - Cargar las variables `BASE_URL`, `BD_BASE_URL` y `E2E_ENABLED=true` en *Settings → Secrets and variables → Actions → Variables*.
+   - Cargar los secretos `APP_USER`, `APP_PASSWORD`, `BD_USER` y `BD_PASSWORD` en *Settings → Secrets and variables → Actions → Secrets*.
 
 ## Versiones y releases
 

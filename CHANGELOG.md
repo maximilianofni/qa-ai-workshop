@@ -4,6 +4,19 @@ Todos los cambios relevantes del proyecto se registran en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa
 [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Agregado
+- **Biblioteca Digital** en Playwright: BD-SMOKE-01, BD-LOGIN-01, BD-LOGIN-02, BD-LOGIN-03 y
+  BD-LOGOUT-01, con credenciales tomadas del `.env` (`BD_BASE_URL`, `BD_USER`, `BD_PASSWORD`).
+- Comandos `test:anpr` y `test:bd` para correr un solo producto.
+- README: problemas comunes de `npm` en Windows (comando no reconocido y política de ejecución).
+
+### Cambiado
+- Playwright usa un proyecto por producto (`anpr` y `biblioteca-digital`), cada uno con su URL.
+- La comparación de herramientas corre solo los casos de ANPR.
+- `package.json` habilita los scripts de instalación de Cypress y esbuild (requerido por npm 11).
+
 ## [1.4.0] - 2026-10-02
 
 ### Agregado
