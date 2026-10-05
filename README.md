@@ -87,6 +87,26 @@ Biblioteca Digital no tiene login propio: al entrar redirige al **autenticador**
 | BD-LOGIN-03 | Login con campos vacíos muestra "Este campo es requerido" debajo de cada campo | ✅ | – | – | – |
 | BD-LOGOUT-01 | Cerrar sesión vuelve al login y la app vuelve a pedir credenciales | ✅ | – | – | – |
 
+## Casos automatizados – AS (servidor de analíticas)
+
+AS no es una aplicación web: se instala en una máquina virtual Linux (`10.150.2.165`) con un
+instalador `.sh` que baja la imagen de Docker. Los tests usan Playwright como *test runner* y
+se conectan por **SSH** (librería `ssh2`), igual que a mano con PuTTY: ejecutan los comandos y
+validan la salida de la consola y los archivos que quedan en `logs/`. Corren en orden:
+
+| ID | Caso | Qué valida |
+|---|---|---|
+| AS-INSTALL-01 | Instalación con la analítica de ANPR (`installer2.4-rc1.sh ... -i`) | La salida termina con `Installation complete.` y el servicio `uip-analytics-server` queda `active` |
+| AS-ANPR-01 | La analítica detecta patentes | El visor `http://10.150.2.165:4492/` responde, se detectan 5 patentes nuevas en `logs/<cámara>/<año>/<mes>/<día>/<hora>/log_file_*.log` y cada una tiene sus 3 fotos (`.jpg`, `_crop.jpg`, `_ref.jpg`) |
+| AS-UNINSTALL-01 | Desinstalación (`installer2.4-rc1.sh ... -u`) | La salida muestra `Uninstalling Analytics Server` y `Service has been uninstalled.`, y el servicio deja de correr |
+
+- Con `npm run test:as:headed` se abre el visor y la consola muestra cada patente a medida que
+  se detecta y, al final, la ruta de sus fotos en el servidor.
+- La cantidad de patentes a esperar se cambia en `PATENTES_ESPERADAS` (`tests/as/anpr.spec.ts`).
+- El reloj del servidor está desfasado con el de las PCs: el test toma la hora del servidor
+  para contar solo las patentes nuevas.
+- Sin `AS_HOST` en el `.env` (por ejemplo en CI), estos tests se saltean.
+
 ## Comparación de herramientas
 
 `npm run comparar` ejecuta los mismos casos en cada herramienta (mismo Chrome, sin ventana
@@ -136,7 +156,7 @@ Cada caso es un *issue* con su estado (**Todo**, **In Progress**, **Done**) y el
 | ANPR | En curso |
 | Biblioteca Digital | En curso |
 | Reconocimiento Facial Mendoza | Planificado |
-| AS | Planificado |
+| AS | En curso |
 | VMS | Planificado |
 
 ## Requisitos
@@ -160,6 +180,10 @@ APP_PASSWORD=<contraseña>
 BD_BASE_URL=http://vms-extractions-web.testing.deploy.danaide.com.ar/
 BD_USER=<usuario de Biblioteca Digital>
 BD_PASSWORD=<contraseña de Biblioteca Digital>
+AS_HOST=10.150.2.165
+AS_USER=<usuario de la VM de AS>
+AS_PASSWORD=<contraseña de la VM de AS (también la de sudo)>
+AS_DIR=/home/testing/server2.4
 KATALON_API_KEY=<API key de Katalon, solo para ejecutar Katalon por consola>
 ```
 
@@ -187,6 +211,8 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 | Playwright | `npm run test:headed` | Corre los tests de a uno, con Chrome visible y maximizado |
 | Playwright | `npm run test:anpr` | Corre solo los tests de ANPR |
 | Playwright | `npm run test:bd` | Corre solo los tests de Biblioteca Digital |
+| Playwright | `npm run test:as` | Instala AS, espera las patentes y desinstala (por SSH) |
+| Playwright | `npm run test:as:headed` | Lo mismo, mostrando el visor de patentes y cada patente en la consola |
 | Playwright | `npm run report` | Abre el reporte HTML de la última ejecución |
 | Cypress | `npm run cy:run` | Corre todos los tests sin mostrar el navegador |
 | Cypress | `npm run cy:headed` | Corre los tests con Chrome visible |
@@ -206,8 +232,9 @@ Cuando un test falla, el reporte guarda captura de pantalla, video y traza para 
 ## Estructura del proyecto
 
 ```
-tests/                  Casos de prueba automatizados con Playwright (ANPR)
+tests/anpr/             Casos de ANPR con Playwright
 tests/biblioteca-digital/  Casos de Biblioteca Digital con Playwright
+tests/as/               Casos de AS (servidor de analíticas) por SSH
 cypress/e2e/            Los mismos casos automatizados con Cypress
 selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
 katalon/                Proyecto Katalon Studio con los mismos casos (abrir ANPR.prj desde el IDE)

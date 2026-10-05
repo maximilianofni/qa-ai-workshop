@@ -11,8 +11,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
   BD-LOGOUT-01, con credenciales tomadas del `.env` (`BD_BASE_URL`, `BD_USER`, `BD_PASSWORD`).
 - Comandos `test:anpr` y `test:bd` para correr un solo producto.
 - README: problemas comunes de `npm` en Windows (comando no reconocido y política de ejecución).
+- **AS** (servidor de analíticas) por SSH: AS-INSTALL-01, AS-ANPR-01 y AS-UNINSTALL-01, con el
+  acceso tomado del `.env` (`AS_HOST`, `AS_USER`, `AS_PASSWORD`, `AS_DIR`). Comandos `test:as` y
+  `test:as:headed`.
 
 ### Cambiado
+- Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.
 - Playwright usa un proyecto por producto (`anpr` y `biblioteca-digital`), cada uno con su URL.
 - La comparación de herramientas corre solo los casos de ANPR.
 - `package.json` habilita los scripts de instalación de Cypress y esbuild (requerido por npm 11).
