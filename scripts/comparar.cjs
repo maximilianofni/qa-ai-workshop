@@ -36,7 +36,7 @@ const HERRAMIENTAS = [
     nombre: 'Playwright',
     correr() {
       const archivo = path.join(TMP, 'playwright.json');
-      ejecutar('npx', ['playwright', 'test', '--workers=1', '--reporter=json'], {
+      ejecutar('npx', ['playwright', 'test', '--project=anpr', '--workers=1', '--reporter=json'], {
         PLAYWRIGHT_JSON_OUTPUT_FILE: archivo,
       });
       const json = JSON.parse(fs.readFileSync(archivo, 'utf-8'));

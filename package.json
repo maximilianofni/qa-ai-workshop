@@ -23,6 +23,8 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed --workers=1",
+    "test:anpr": "playwright test --project=anpr",
+    "test:bd": "playwright test --project=biblioteca-digital",
     "report": "playwright show-report",
     "cy:run": "node scripts/cypress.cjs run --browser chrome",
     "cy:headed": "node scripts/cypress.cjs run --browser chrome --headed",
@@ -52,5 +54,9 @@
   },
   "dependencies": {
     "dotenv": "^18.0.5"
+  },
+  "allowScripts": {
+    "cypress@16.1.1": true,
+    "esbuild@0.28.2": true
   }
 }

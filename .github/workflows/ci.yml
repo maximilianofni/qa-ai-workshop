@@ -39,6 +39,9 @@ jobs:
       BASE_URL: ${{ vars.BASE_URL }}
       APP_USER: ${{ secrets.APP_USER }}
       APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+      BD_BASE_URL: ${{ vars.BD_BASE_URL }}
+      BD_USER: ${{ secrets.BD_USER }}
+      BD_PASSWORD: ${{ secrets.BD_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
