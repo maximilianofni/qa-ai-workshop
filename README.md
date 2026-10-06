@@ -331,8 +331,8 @@ de tu sesión (no como servicio de Windows), así los tests de VMS pueden abrir 
    `https://github.com/maximilianofni/qa-ai-workshop.git`, la rama `*/main` y el Script Path
    `Jenkinsfile`.
 6. **Ejecutar**: la primera vez, *Construir ahora* (usa los valores por defecto). Después aparece
-   *Build with Parameters* para elegir qué productos correr. AS viene destildado porque instala y
-   desinstala en la VM y tarda varios minutos.
+   *Build with Parameters* para elegir qué productos correr. Todos vienen tildados; AS tarda varios
+   minutos porque instala y desinstala en la VM.
 
 En cada build se ve el avance etapa por etapa. En el menú del build quedan *Test Result* (con el
 historial de casos entre builds) y un **Reporte** por producto, con capturas, videos y trazas.

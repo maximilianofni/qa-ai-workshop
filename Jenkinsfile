@@ -24,7 +24,7 @@ pipeline {
   parameters {
     booleanParam(name: 'ANPR', defaultValue: true, description: 'Tests de ANPR')
     booleanParam(name: 'BIBLIOTECA_DIGITAL', defaultValue: true, description: 'Tests de Biblioteca Digital')
-    booleanParam(name: 'AS', defaultValue: false, description: 'Tests de AS: instala y desinstala en la VM por SSH (tarda varios minutos)')
+    booleanParam(name: 'AS', defaultValue: true, description: 'Tests de AS: instala y desinstala en la VM por SSH (tarda varios minutos)')
     booleanParam(name: 'VMS', defaultValue: true, description: 'Tests de VMS: abre las aplicaciones de escritorio (no usar el mouse ni el teclado)')
   }
 
