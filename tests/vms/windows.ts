@@ -18,6 +18,13 @@ public static class W {
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr h, int m, IntPtr w, string l);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, int m, IntPtr w, IntPtr l);
   [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr hdc, uint flags);
+  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern void keybd_event(byte k, byte s, int f, IntPtr e);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, IntPtr p);
+  [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+  [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a, uint b, bool f);
+  [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr h);
 }
 '@
 $A = [Windows.Automation.AutomationElement]
@@ -27,6 +34,22 @@ function Ventana { $A::RootElement.FindAll([Windows.Automation.TreeScope]::Child
     (New-Object Windows.Automation.PropertyCondition($A::ProcessIdProperty, [int]$env:VMS_PID))) |
   Where-Object { -not $_.Current.BoundingRectangle.IsEmpty } | Select-Object -First 1 }
 function Controles { $v = Ventana; if ($v) { $v.FindAll($Todo, [Windows.Automation.Condition]::TrueCondition) } }
+# Pasa la ventana al frente: el botón de login de VMS no responde si la ventana no está activa.
+# Windows no deja hacerlo si el usuario está usando otra ventana (por ejemplo el navegador con
+# Jenkins): se toca Alt (como en Alt+Tab) y se toma prestado el permiso de la ventana activa
+function Activar {
+  $h = [IntPtr](Ventana).Current.NativeWindowHandle
+  for ($i = 0; $i -lt 10 -and [W]::GetForegroundWindow() -ne $h; $i++) {
+    $activa = [W]::GetWindowThreadProcessId([W]::GetForegroundWindow(), [IntPtr]::Zero)
+    $propio = [W]::GetCurrentThreadId()
+    [W]::AttachThreadInput($propio, $activa, $true) | Out-Null
+    [W]::keybd_event(0x12, 0, 0, [IntPtr]::Zero); [W]::keybd_event(0x12, 0, 2, [IntPtr]::Zero)
+    [W]::BringWindowToTop($h) | Out-Null
+    [W]::SetForegroundWindow($h) | Out-Null
+    [W]::AttachThreadInput($propio, $activa, $false) | Out-Null
+    Start-Sleep -Milliseconds 200
+  }
+}
 # Imagen de la ventana pedida a Windows (PrintWindow) y no copiada de la pantalla: sale bien
 # aunque haya otra ventana encima, por ejemplo el navegador con Jenkins
 function Capturar {
@@ -92,6 +115,7 @@ export class AppEscritorio {
     return this.ejecutar(
       `$e = Controles | Where-Object { $_.Current.Name -eq $env:TEXTO } | Select-Object -First 1
        if (-not $e) { throw "No se encontró el control '$env:TEXTO'" }
+       Activar
        $r = $e.Current.BoundingRectangle; $h = [IntPtr]$e.Current.NativeWindowHandle
        $pos = [IntPtr](([int]($r.Height / 2) -shl 16) -bor [int]($r.Width / 2))
        [W]::PostMessage($h, 0x201, [IntPtr]1, $pos) | Out-Null
