@@ -17,6 +17,8 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - **VMS** (aplicaciones de escritorio WinForms) con UI Automation y OCR de Windows: login correcto,
   contraseña incorrecta y usuario inválido en Control Center y Configurator (VMS-CC-LOGIN-01/02/03 y
   VMS-CFG-LOGIN-01/02/03). Comando `test:vms`.
+- **Jenkins**: `Jenkinsfile` con una etapa por producto, credenciales de Jenkins y un reporte HTML
+  por producto. Comando `jenkins` para levantarlo en la PC de la demo.
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.

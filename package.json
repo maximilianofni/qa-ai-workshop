@@ -40,7 +40,8 @@
     "ka:headed": "node scripts/katalon.cjs --headed",
     "ka:report": "node scripts/katalon.cjs --reporte",
     "comparar": "node scripts/comparar.cjs && node scripts/abrir.cjs reports/comparacion.html",
-    "comparar:ver": "node scripts/abrir.cjs reports/comparacion.html"
+    "comparar:ver": "node scripts/abrir.cjs reports/comparacion.html",
+    "jenkins": "node scripts/jenkins.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

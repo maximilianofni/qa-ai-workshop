@@ -256,6 +256,7 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 | Katalon | `npm run ka:report` | Abre el último reporte HTML, incluidos los generados desde el IDE |
 | Todas | `npm run comparar` | Corre los mismos casos en cada herramienta y abre una página con la comparación de tiempos |
 | Todas | `npm run comparar:ver` | Vuelve a abrir la última comparación |
+| Jenkins | `npm run jenkins` | Levanta Jenkins en <http://localhost:8080> para la demo (ver [Jenkins](#jenkins-demo-local)) |
 
 Cuando un test falla, el reporte guarda captura de pantalla, video y traza para analizar el error.
 
@@ -274,6 +275,7 @@ reports/                Comparación de tiempos generada por `npm run comparar` 
 docs/                   Documentación del workshop
 prompts/                Prompts para el agente de IA (uno por requerimiento)
 .github/workflows/      Pipelines de CI y releases
+Jenkinsfile             Pipeline de Jenkins (una etapa por producto)
 playwright.config.ts    Configuración de Playwright (navegador, reportes, evidencias)
 cypress.config.ts       Configuración de Cypress
 .mocharc.json           Configuración de Mocha para Selenium
@@ -293,6 +295,53 @@ El pipeline [.github/workflows/ci.yml](.github/workflows/ci.yml) tiene dos etapa
    - Registrar el runner en *Settings → Actions → Runners*.
    - Cargar las variables `BASE_URL`, `BD_BASE_URL` y `E2E_ENABLED=true` en *Settings → Secrets and variables → Actions → Variables*.
    - Cargar los secretos `APP_USER`, `APP_PASSWORD`, `BD_USER` y `BD_PASSWORD` en *Settings → Secrets and variables → Actions → Secrets*.
+
+## Jenkins (demo local)
+
+El [Jenkinsfile](Jenkinsfile) corre los tests de Playwright con una etapa por producto (ANPR,
+Biblioteca Digital, AS y VMS), elegibles al lanzar el build, y publica un reporte por producto.
+Si una etapa falla, las demás siguen corriendo.
+
+Para la demo, Jenkins corre en la misma PC donde está instalado VMS. Se inicia desde una consola
+de tu sesión (no como servicio de Windows), así los tests de VMS pueden abrir las aplicaciones.
+
+1. **Instalar Java 21** (una sola vez) y abrir una consola nueva:
+   ```
+   winget install EclipseAdoptium.Temurin.21.JDK
+   ```
+2. **Levantar Jenkins** con `npm run jenkins` y dejar esa consola abierta. La primera vez descarga
+   Jenkins (unos 100 MB).
+3. **Configuración inicial** en <http://localhost:8080> (una sola vez):
+   - Pegar la contraseña inicial, que aparece en la consola y en
+     `%USERPROFILE%\.jenkins\secrets\initialAdminPassword`.
+   - Elegir *Install suggested plugins* y crear el usuario administrador.
+   - En *Administrar Jenkins → Plugins → Available plugins*, instalar **HTML Publisher**.
+4. **Cargar las credenciales** en *Administrar Jenkins → Credentials → System → Global credentials
+   → Add Credentials*, de tipo *Username with password* y con estos ID:
+
+   | ID | Usuario y contraseña de |
+   |---|---|
+   | `anpr` | ANPR (`APP_USER` / `APP_PASSWORD`) |
+   | `biblioteca-digital` | Biblioteca Digital (`BD_USER` / `BD_PASSWORD`) |
+   | `as` | La VM de AS (`AS_USER` / `AS_PASSWORD`) |
+   | `vms` | VMS (`VMS_USER` / `VMS_PASSWORD`) |
+
+5. **Crear el job**: *Nueva tarea* → nombre `qa-ai-workshop` → tipo **Pipeline**. En *Pipeline*
+   elegir *Pipeline script from SCM* → *Git*, con la URL
+   `https://github.com/maximilianofni/qa-ai-workshop.git`, la rama `*/main` y el Script Path
+   `Jenkinsfile`.
+6. **Ejecutar**: la primera vez, *Construir ahora* (usa los valores por defecto). Después aparece
+   *Build with Parameters* para elegir qué productos correr. AS viene destildado porque instala y
+   desinstala en la VM y tarda varios minutos.
+
+En cada build se ve el avance etapa por etapa. En el menú del build quedan *Test Result* (con el
+historial de casos entre builds) y un **Reporte** por producto, con capturas, videos y trazas.
+
+- Jenkins baja el código de GitHub: lo que no esté pusheado no se prueba.
+- Durante la etapa de VMS se abren las aplicaciones en el escritorio: no usar el mouse ni el
+  teclado.
+- `npm run jenkins` desactiva la política de seguridad de contenido (CSP) de Jenkins para que el
+  reporte de Playwright se vea. Está pensado solo para la demo local.
 
 ## Versiones y releases
 
