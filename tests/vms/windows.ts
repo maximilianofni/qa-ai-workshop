@@ -17,6 +17,7 @@ using System; using System.Runtime.InteropServices;
 public static class W {
   [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern IntPtr SendMessage(IntPtr h, int m, IntPtr w, string l);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, int m, IntPtr w, IntPtr l);
+  [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr hdc, uint flags);
 }
 '@
 $A = [Windows.Automation.AutomationElement]
@@ -26,6 +27,16 @@ function Ventana { $A::RootElement.FindAll([Windows.Automation.TreeScope]::Child
     (New-Object Windows.Automation.PropertyCondition($A::ProcessIdProperty, [int]$env:VMS_PID))) |
   Where-Object { -not $_.Current.BoundingRectangle.IsEmpty } | Select-Object -First 1 }
 function Controles { $v = Ventana; if ($v) { $v.FindAll($Todo, [Windows.Automation.Condition]::TrueCondition) } }
+# Imagen de la ventana pedida a Windows (PrintWindow) y no copiada de la pantalla: sale bien
+# aunque haya otra ventana encima, por ejemplo el navegador con Jenkins
+function Capturar {
+  $v = Ventana; $r = $v.Current.BoundingRectangle
+  $bmp = New-Object Drawing.Bitmap ([int]$r.Width), ([int]$r.Height)
+  $g = [Drawing.Graphics]::FromImage($bmp); $hdc = $g.GetHdc()
+  [W]::PrintWindow([IntPtr]$v.Current.NativeWindowHandle, $hdc, 2) | Out-Null  # 2 = PW_RENDERFULLCONTENT
+  $g.ReleaseHdc($hdc); $g.Dispose()
+  $bmp
+}
 `;
 
 function powershell(script: string, variables: Record<string, string> = {}): Promise<string> {
@@ -93,9 +104,7 @@ export class AppEscritorio {
   /** Captura de la ventana, para adjuntar al reporte */
   async captura(): Promise<Buffer> {
     const base64 = await this.ejecutar(
-      `$r = (Ventana).Current.BoundingRectangle
-       $bmp = New-Object Drawing.Bitmap ([int]$r.Width), ([int]$r.Height)
-       [Drawing.Graphics]::FromImage($bmp).CopyFromScreen([int]$r.X, [int]$r.Y, 0, 0, $bmp.Size)
+      `$bmp = Capturar
        $ms = New-Object IO.MemoryStream; $bmp.Save($ms, [Drawing.Imaging.ImageFormat]::Png)
        [Convert]::ToBase64String($ms.ToArray())`
     );
@@ -120,10 +129,8 @@ export class AppEscritorio {
          $t = $asTask.MakeGenericMethod($tipo).Invoke($null, @($op)); $t.Wait() | Out-Null; $t.Result }
 
        # Captura de la ventana al doble de tamaño: el OCR lee mejor la letra chica
-       $r = (Ventana).Current.BoundingRectangle
-       $bmp = New-Object Drawing.Bitmap ([int]$r.Width), ([int]$r.Height)
-       [Drawing.Graphics]::FromImage($bmp).CopyFromScreen([int]$r.X, [int]$r.Y, 0, 0, $bmp.Size)
-       $doble = New-Object Drawing.Bitmap $bmp, ([int]$r.Width * 2), ([int]$r.Height * 2)
+       $bmp = Capturar
+       $doble = New-Object Drawing.Bitmap $bmp, ($bmp.Width * 2), ($bmp.Height * 2)
        $ms = New-Object IO.MemoryStream; $doble.Save($ms, [Drawing.Imaging.ImageFormat]::Bmp)
 
        $stream = [IO.WindowsRuntimeStreamExtensions]::AsRandomAccessStream($ms)
