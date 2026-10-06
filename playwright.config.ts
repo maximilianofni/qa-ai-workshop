@@ -48,5 +48,12 @@ export default defineConfig({
       testDir: './tests/as',
       use: { ...chrome },
     },
+    {
+      // Aplicaciones de escritorio de VMS (WinForms): se manejan con UI Automation de Windows.
+      // De a una, porque comparten el escritorio.
+      name: 'vms',
+      testDir: './tests/vms',
+      fullyParallel: false,
+    },
   ],
 });

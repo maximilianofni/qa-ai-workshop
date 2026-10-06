@@ -14,6 +14,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - **AS** (servidor de analíticas) por SSH: AS-INSTALL-01, AS-ANPR-01 y AS-UNINSTALL-01, con el
   acceso tomado del `.env` (`AS_HOST`, `AS_USER`, `AS_PASSWORD`, `AS_DIR`). Comandos `test:as` y
   `test:as:headed`.
+- **VMS** (aplicaciones de escritorio WinForms) con UI Automation y OCR de Windows: login correcto,
+  contraseña incorrecta y usuario inválido en Control Center y Configurator (VMS-CC-LOGIN-01/02/03 y
+  VMS-CFG-LOGIN-01/02/03). Comando `test:vms`.
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.

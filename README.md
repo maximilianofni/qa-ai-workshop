@@ -107,6 +107,31 @@ validan la salida de la consola y los archivos que quedan en `logs/`. Corren en 
   para contar solo las patentes nuevas.
 - Sin `AS_HOST` en el `.env` (por ejemplo en CI), estos tests se saltean.
 
+## Casos automatizados – VMS (aplicaciones de escritorio)
+
+VMS son aplicaciones de escritorio de Windows hechas en C# (**WinForms**, .NET Framework 4):
+*Control Center* (`XDRControlCenter.exe`) y *Configurator* (`XDRConfigurator.exe`), instaladas en
+`C:\Program Files (x86)\Danaide\UltraIP Client`. Los tests usan Playwright como *test runner* y
+manejan las ventanas con **UI Automation de Windows** desde PowerShell, sin instalar nada:
+
+- Los controles de VMS son personalizados (sin ids fijos ni acciones de accesibilidad): se buscan
+  por el **texto visible** y se escribe y se hace clic con mensajes de Windows, como una persona.
+- Los mensajes de error del login se dibujan sin exponer el texto: se leen con el **OCR de
+  Windows** (idioma español) a partir de una captura de la ventana.
+
+| ID | Caso | Control Center | Configurator |
+|---|---|---|---|
+| LOGIN-01 | Login en el sistema `system 145` muestra la pantalla principal | `VMS-CC-LOGIN-01` ✅ | `VMS-CFG-LOGIN-01` ✅ |
+| LOGIN-02 | Usuario válido y contraseña incorrecta muestra "La contraseña es incorrecta" | `VMS-CC-LOGIN-02` ✅ | `VMS-CFG-LOGIN-02` ✅ |
+| LOGIN-03 | Usuario y contraseña incorrectos muestra "Cuenta de usuario inválida" | `VMS-CC-LOGIN-03` ✅ | `VMS-CFG-LOGIN-03` ✅ |
+
+- Mientras corren se abren las ventanas en el escritorio: no usar el mouse ni el teclado.
+- Corren de a uno (`--workers=1`): dos Control Center abiertos a la vez se pisan.
+- Los logins fallidos corren primero: con "Recordar" tildado la app guarda el último usuario
+  escrito, y así queda recordando el usuario válido.
+- Cada test adjunta al reporte una captura de la ventana.
+- Solo corren en Windows y con `VMS_USER` en el `.env`; si no, se saltean.
+
 ## Comparación de herramientas
 
 `npm run comparar` ejecuta los mismos casos en cada herramienta (mismo Chrome, sin ventana
@@ -157,7 +182,7 @@ Cada caso es un *issue* con su estado (**Todo**, **In Progress**, **Done**) y el
 | Biblioteca Digital | En curso |
 | Reconocimiento Facial Mendoza | Planificado |
 | AS | En curso |
-| VMS | Planificado |
+| VMS | En curso |
 
 ## Requisitos
 
@@ -184,6 +209,10 @@ AS_HOST=10.150.2.165
 AS_USER=<usuario de la VM de AS>
 AS_PASSWORD=<contraseña de la VM de AS (también la de sudo)>
 AS_DIR=/home/testing/server2.4
+VMS_DIR=C:\Program Files (x86)\Danaide\UltraIP Client
+VMS_SISTEMA=system 145
+VMS_USER=<usuario de VMS>
+VMS_PASSWORD=<contraseña de VMS>
 KATALON_API_KEY=<API key de Katalon, solo para ejecutar Katalon por consola>
 ```
 
@@ -213,6 +242,7 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 | Playwright | `npm run test:bd` | Corre solo los tests de Biblioteca Digital |
 | Playwright | `npm run test:as` | Instala AS, espera las patentes y desinstala (por SSH) |
 | Playwright | `npm run test:as:headed` | Lo mismo, mostrando el visor de patentes y cada patente en la consola |
+| Playwright | `npm run test:vms` | Abre Control Center y Configurator y prueba el login (solo Windows) |
 | Playwright | `npm run report` | Abre el reporte HTML de la última ejecución |
 | Cypress | `npm run cy:run` | Corre todos los tests sin mostrar el navegador |
 | Cypress | `npm run cy:headed` | Corre los tests con Chrome visible |
@@ -235,6 +265,7 @@ Cuando un test falla, el reporte guarda captura de pantalla, video y traza para 
 tests/anpr/             Casos de ANPR con Playwright
 tests/biblioteca-digital/  Casos de Biblioteca Digital con Playwright
 tests/as/               Casos de AS (servidor de analíticas) por SSH
+tests/vms/              Casos de VMS (aplicaciones de escritorio) con UI Automation y OCR
 cypress/e2e/            Los mismos casos automatizados con Cypress
 selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
 katalon/                Proyecto Katalon Studio con los mismos casos (abrir ANPR.prj desde el IDE)
