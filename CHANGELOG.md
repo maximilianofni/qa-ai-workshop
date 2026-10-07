@@ -21,11 +21,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
   por producto. Comando `jenkins` para levantarlo en la PC de la demo.
 - README: comparación entre GitHub Actions y Jenkins, y cómo preparar una PC Windows como agente
   para correr VMS en la empresa.
+- **ANPR – Administración**: alta y baja de patentes asociadas a una lista (ADM-PAT-01 y ADM-PAT-02),
+  con acciones reutilizables de Administración, del widget Alarmas y de Auditoría.
+- **Integración AS → ANPR**: las patentes que detecta AS llegan al widget Lista y se ve su detalle
+  (INT-ANPR-01/02); patentes en una lista con alarma generan alarmas que se atienden y quedan en
+  Auditoría (INT-ALARMA-01/02/03). Con `--headed` se ven ANPR y el video de AS lado a lado.
+  Comandos `test:integracion` y `test:integracion:headed`.
+- **Jenkins**: pipeline aparte para las integraciones (`Jenkinsfile.integracion`), con una etapa por
+  integración y la opción de ver el navegador en pantalla.
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.
 - Playwright usa un proyecto por producto (`anpr` y `biblioteca-digital`), cada uno con su URL.
-- La comparación de herramientas corre solo los casos de ANPR.
+- La comparación de herramientas corre solo los casos de ANPR que existen en las cuatro
+  herramientas (login y smoke).
 - `package.json` habilita los scripts de instalación de Cypress y esbuild (requerido por npm 11).
 
 ### Corregido

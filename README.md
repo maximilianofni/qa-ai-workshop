@@ -73,6 +73,12 @@ de casos, explicación funcional de cada test y un **resumen ejecutivo para la l
 | LOGIN-02 | Login con contraseña incorrecta muestra el mensaje de error exacto | ✅ | ✅ | ✅ | ✅ | #4 |
 | LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | ✅ | ✅ | ✅ | ✅ | #4 |
 | LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | ✅ | ✅ | ✅ | ✅ | #3 |
+| ADM-PAT-01 | Alta de la patente AC832JA (Mercosur - Autos) asociada a la lista "LISTA TESTING AS" | ✅ | – | – | – | |
+| ADM-PAT-02 | Baja de la patente: al buscarla dice "No hay resultados" | ✅ | – | – | – | |
+
+Las acciones de Administración (buscar, crear, asociar a una lista y eliminar patentes), del widget
+Alarmas y de Auditoría están en `tests/anpr/administracion.ts`, `alarmas.ts` y `auditoria.ts`, y
+las reutilizan los tests de integración.
 
 ## Casos automatizados – Biblioteca Digital
 
@@ -131,6 +137,31 @@ manejan las ventanas con **UI Automation de Windows** desde PowerShell, sin inst
   escrito, y así queda recordando el usuario válido.
 - Cada test adjunta al reporte una captura de la ventana.
 - Solo corren en Windows y con `VMS_USER` en el `.env`; si no, se saltean.
+
+## Casos automatizados – Integración AS → ANPR
+
+Prueban el circuito completo entre productos: la analítica de AS detecta patentes en un video
+(`telepeaje6.avi`) y las manda por *webhook* a ANPR (configuración `server_config_ANPR_capture.json`),
+donde las ve el operador. El video siempre da las mismas patentes en el mismo orden
+(AC832JA, NEW157, HKX319, HBB384, NAM903), pero los tests usan las que realmente detecta AS en sus logs.
+
+| ID | Caso |
+|---|---|
+| INT-ANPR-01 | Las 5 patentes que detecta AS llegan como capturas nuevas al widget Lista de ANPR, con la cámara del AS de testing |
+| INT-ANPR-02 | El detalle de una de ellas muestra patente, fuente de captura, cámara y nivel de confianza |
+| INT-ALARMA-01 | AC832JA, NEW157 y HKX319, dadas de alta en "LISTA TESTING AS", al ser detectadas generan alarmas "alarma testing AS" Pendientes |
+| INT-ALARMA-02 | Atender cada alarma (Atender → En curso → "Válida - Alarma válida" con comentario → Guardar) la deja Cerrada |
+| INT-ALARMA-03 | En Auditoría → Alarmas aparecen las tres Cerradas, con usuario y acción; el detalle muestra la observación y el historial |
+
+- Con `--headed`, mientras AS detecta se ven lado a lado ANPR (izquierda) y el visor de AS con el
+  video (derecha); el resto de los pasos corre con el navegador maximizado.
+- Al terminar, aunque algo falle, AS queda desinstalado y las patentes creadas se borran.
+- Usan la misma VM que los tests de AS: corren de a uno (`--workers=1`) y, si AS ya está instalado
+  (otra ejecución en curso), se frenan con un aviso.
+- Requieren `AS_HOST` y `APP_USER` en el `.env`; si no, se saltean.
+- **Hallazgo:** el reloj del servidor de ANPR está alrededor de un minuto adelantado respecto de las
+  PCs. Como Auditoría busca por defecto "la última hora" según el reloj de la PC, una alarma recién
+  atendida no aparece hasta que pasa ese minuto. El test carga a mano el rango de fecha de captura.
 
 ## Comparación de herramientas
 
@@ -243,6 +274,8 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 | Playwright | `npm run test:as` | Instala AS, espera las patentes y desinstala (por SSH) |
 | Playwright | `npm run test:as:headed` | Lo mismo, mostrando el visor de patentes y cada patente en la consola |
 | Playwright | `npm run test:vms` | Abre Control Center y Configurator y prueba el login (solo Windows) |
+| Playwright | `npm run test:integracion` | Corre las integraciones AS → ANPR (lista, detalle y alarmas) |
+| Playwright | `npm run test:integracion:headed` | Lo mismo, con ANPR y el video de AS lado a lado en pantalla |
 | Playwright | `npm run report` | Abre el reporte HTML de la última ejecución |
 | Cypress | `npm run cy:run` | Corre todos los tests sin mostrar el navegador |
 | Cypress | `npm run cy:headed` | Corre los tests con Chrome visible |
@@ -267,6 +300,7 @@ tests/anpr/             Casos de ANPR con Playwright
 tests/biblioteca-digital/  Casos de Biblioteca Digital con Playwright
 tests/as/               Casos de AS (servidor de analíticas) por SSH
 tests/vms/              Casos de VMS (aplicaciones de escritorio) con UI Automation y OCR
+tests/integracion/      Integraciones entre productos (AS → ANPR)
 cypress/e2e/            Los mismos casos automatizados con Cypress
 selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
 katalon/                Proyecto Katalon Studio con los mismos casos (abrir ANPR.prj desde el IDE)
@@ -276,6 +310,7 @@ docs/                   Documentación del workshop
 prompts/                Prompts para el agente de IA (uno por requerimiento)
 .github/workflows/      Pipelines de CI y releases
 Jenkinsfile             Pipeline de Jenkins (una etapa por producto)
+Jenkinsfile.integracion Pipeline de Jenkins de las integraciones (una etapa por integración)
 playwright.config.ts    Configuración de Playwright (navegador, reportes, evidencias)
 cypress.config.ts       Configuración de Cypress
 .mocharc.json           Configuración de Mocha para Selenium
@@ -356,6 +391,19 @@ historial de casos entre builds) y un **Reporte** por producto, con capturas, vi
   (aunque se esté mirando el avance en el navegador): no usar el mouse ni el teclado mientras tanto.
 - `npm run jenkins` desactiva la política de seguridad de contenido (CSP) de Jenkins para que el
   reporte de Playwright se vea. Está pensado solo para la demo local.
+
+#### Pipeline de integraciones
+
+Las integraciones entre productos tienen su propio pipeline, [Jenkinsfile.integracion](Jenkinsfile.integracion),
+con una etapa por integración (hoy *AS → ANPR: Lista y detalle* y *AS → ANPR: Alarmas*). Va aparte
+porque instala AS, crea datos en ANPR y tarda más; cada integración nueva se suma como una etapa.
+
+- Se crea como otro job (por ejemplo `qa-ai-workshop-integracion`), igual que el anterior pero con
+  el Script Path `Jenkinsfile.integracion`. Usa las credenciales `anpr` y `as` que ya están cargadas.
+- El parámetro **VER_NAVEGADOR** abre el navegador en pantalla, con ANPR y el video de AS lado a
+  lado: pensado para mostrarlo en una demo.
+- Corre sin reintentos: cada intento vuelve a instalar AS y a crear datos en ANPR.
+- No lanzarlo a la vez que la etapa AS del pipeline de productos: los dos usan la VM de AS.
 
 ### Llevarlo a la empresa
 
