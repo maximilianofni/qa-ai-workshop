@@ -27,6 +27,8 @@
     "test:bd": "playwright test --project=biblioteca-digital",
     "test:as": "playwright test --project=as",
     "test:as:headed": "playwright test --project=as --headed",
+    "test:integracion": "playwright test --project=integracion --workers=1",
+    "test:integracion:headed": "playwright test --project=integracion --workers=1 --headed",
     "test:vms": "playwright test --project=vms --workers=1",
     "report": "playwright show-report",
     "cy:run": "node scripts/cypress.cjs run --browser chrome",

@@ -49,6 +49,12 @@ export default defineConfig({
       use: { ...chrome },
     },
     {
+      // Integración entre productos: AS detecta patentes y se verifican en la web de ANPR
+      name: 'integracion',
+      testDir: './tests/integracion',
+      use: { ...chrome, baseURL: process.env.BASE_URL },
+    },
+    {
       // Aplicaciones de escritorio de VMS (WinForms): se manejan con UI Automation de Windows.
       // De a una, porque comparten el escritorio.
       name: 'vms',

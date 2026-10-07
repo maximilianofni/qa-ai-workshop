@@ -36,7 +36,8 @@ const HERRAMIENTAS = [
     nombre: 'Playwright',
     correr() {
       const archivo = path.join(TMP, 'playwright.json');
-      ejecutar('npx', ['playwright', 'test', '--project=anpr', '--workers=1', '--reporter=json'], {
+      // Solo login y smoke: son los casos que también están en Cypress, Selenium y Katalon
+      ejecutar('npx', ['playwright', 'test', '--project=anpr', 'login', 'smoke', '--workers=1', '--reporter=json'], {
         PLAYWRIGHT_JSON_OUTPUT_FILE: archivo,
       });
       const json = JSON.parse(fs.readFileSync(archivo, 'utf-8'));
