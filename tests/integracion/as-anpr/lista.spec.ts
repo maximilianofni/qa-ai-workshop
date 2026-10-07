@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { login } from '../anpr/administracion';
+import { login } from '../../anpr/administracion';
 import {
   verificarAsLibre,
   instalarAs,
@@ -7,7 +7,7 @@ import {
   patentesDetectadas,
   mitadDePantalla,
   abrirVisor,
-} from './as';
+} from '../as';
 
 // Integración AS → ANPR: la analítica de AS detecta patentes en un video y las manda por webhook
 // a ANPR, donde aparecen en el widget Lista del Panel de control.

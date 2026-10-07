@@ -300,7 +300,7 @@ tests/anpr/             Casos de ANPR con Playwright
 tests/biblioteca-digital/  Casos de Biblioteca Digital con Playwright
 tests/as/               Casos de AS (servidor de analíticas) por SSH
 tests/vms/              Casos de VMS (aplicaciones de escritorio) con UI Automation y OCR
-tests/integracion/      Integraciones entre productos (AS → ANPR)
+tests/integracion/      Integraciones entre productos: una carpeta por integración (as-anpr/)
 cypress/e2e/            Los mismos casos automatizados con Cypress
 selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
 katalon/                Proyecto Katalon Studio con los mismos casos (abrir ANPR.prj desde el IDE)
@@ -310,7 +310,7 @@ docs/                   Documentación del workshop
 prompts/                Prompts para el agente de IA (uno por requerimiento)
 .github/workflows/      Pipelines de CI y releases
 Jenkinsfile             Pipeline de Jenkins (una etapa por producto)
-Jenkinsfile.integracion Pipeline de Jenkins de las integraciones (una etapa por integración)
+Jenkinsfile.integracion-as-anpr  Pipeline de Jenkins de la integración AS → ANPR
 playwright.config.ts    Configuración de Playwright (navegador, reportes, evidencias)
 cypress.config.ts       Configuración de Cypress
 .mocharc.json           Configuración de Mocha para Selenium
@@ -392,18 +392,26 @@ historial de casos entre builds) y un **Reporte** por producto, con capturas, vi
 - `npm run jenkins` desactiva la política de seguridad de contenido (CSP) de Jenkins para que el
   reporte de Playwright se vea. Está pensado solo para la demo local.
 
-#### Pipeline de integraciones
+#### Pipelines de integraciones
 
-Las integraciones entre productos tienen su propio pipeline, [Jenkinsfile.integracion](Jenkinsfile.integracion),
-con una etapa por integración (hoy *AS → ANPR: Lista y detalle* y *AS → ANPR: Alarmas*). Va aparte
-porque instala AS, crea datos en ANPR y tarda más; cada integración nueva se suma como una etapa.
+Cada integración entre productos tiene su propio pipeline y su propio job, separados del pipeline
+de productos porque instalan AS, crean datos y tardan más. Siguen la misma convención de nombres:
 
-- Se crea como otro job (por ejemplo `qa-ai-workshop-integracion`), igual que el anterior pero con
-  el Script Path `Jenkinsfile.integracion`. Usa las credenciales `anpr` y `as` que ya están cargadas.
+| Integración | Tests | Pipeline | Job |
+|---|---|---|---|
+| AS → ANPR | `tests/integracion/as-anpr/` | [Jenkinsfile.integracion-as-anpr](Jenkinsfile.integracion-as-anpr) | `integracion-as-anpr` |
+
+Una integración nueva (por ejemplo AS → VMS) suma su carpeta `tests/integracion/as-vms/`, su
+`Jenkinsfile.integracion-as-vms` y su job. El pipeline de AS → ANPR tiene una etapa por circuito:
+*Lista y detalle* y *Alarmas*.
+
+- El job se crea igual que el de productos, cambiando el nombre y el Script Path
+  (`Jenkinsfile.integracion-as-anpr`). Usa las credenciales `anpr` y `as` que ya están cargadas.
 - El parámetro **VER_NAVEGADOR** abre el navegador en pantalla, con ANPR y el video de AS lado a
   lado: pensado para mostrarlo en una demo.
 - Corre sin reintentos: cada intento vuelve a instalar AS y a crear datos en ANPR.
-- No lanzarlo a la vez que la etapa AS del pipeline de productos: los dos usan la VM de AS.
+- No lanzarlo a la vez que la etapa AS del pipeline de productos ni que otra integración con AS:
+  todos usan la VM de AS.
 
 ### Llevarlo a la empresa
 

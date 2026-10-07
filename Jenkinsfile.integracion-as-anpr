@@ -1,10 +1,11 @@
-// Pipeline de Jenkins para las integraciones entre productos: una etapa por integración.
+// Pipeline de Jenkins de la integración AS → ANPR: una etapa por circuito (tests/integracion/as-anpr).
+// Cada integración entre productos tiene su propio Jenkinsfile.integracion-<productos> y su job.
 // Es aparte del Jenkinsfile de productos porque instala AS, crea datos en ANPR y tarda más.
-// Las integraciones usan la VM de AS: no correr a la vez que la etapa AS del otro pipeline
+// Usa la VM de AS: no correr a la vez que la etapa AS del otro pipeline ni otra integración con AS
 // (si coinciden, el test se frena con "AS ya está instalado").
 
-// Corre un archivo de tests de integración con su reporte HTML en playwright-report/<archivo>.
-// Si falla, la etapa queda en rojo pero el pipeline sigue con las demás integraciones.
+// Corre un archivo de tests de tests/integracion/as-anpr con su reporte HTML en playwright-report/<archivo>.
+// Si falla, la etapa queda en rojo pero el pipeline sigue con las demás etapas.
 def integracion(String archivo) {
   catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
     withCredentials([
@@ -16,7 +17,7 @@ def integracion(String archivo) {
         "PLAYWRIGHT_JUNIT_OUTPUT_FILE=playwright-report/junit/${archivo}.xml",
       ]) {
         // Sin reintentos: cada intento vuelve a instalar AS y a crear datos en ANPR
-        bat "npx playwright test --project=integracion ${archivo} --retries=0 --reporter=list,html,junit ${params.VER_NAVEGADOR ? '--headed' : ''}"
+        bat "npx playwright test --project=integracion as-anpr/${archivo} --retries=0 --reporter=list,html,junit ${params.VER_NAVEGADOR ? '--headed' : ''}"
       }
     }
   }
@@ -26,8 +27,8 @@ pipeline {
   agent any
 
   parameters {
-    booleanParam(name: 'AS_ANPR_LISTA', defaultValue: true, description: 'AS → ANPR: las patentes detectadas llegan al widget Lista y se ve su detalle')
-    booleanParam(name: 'AS_ANPR_ALARMAS', defaultValue: true, description: 'AS → ANPR: patentes en una lista con alarma generan alarmas que se atienden y quedan en Auditoría')
+    booleanParam(name: 'LISTA', defaultValue: true, description: 'Las patentes detectadas llegan al widget Lista y se ve su detalle')
+    booleanParam(name: 'ALARMAS', defaultValue: true, description: 'Patentes en una lista con alarma generan alarmas que se atienden y quedan en Auditoría')
     booleanParam(name: 'VER_NAVEGADOR', defaultValue: false, description: 'Abrir el navegador en pantalla (para una demo): ANPR a la izquierda y el video de AS a la derecha')
   }
 
@@ -52,11 +53,11 @@ pipeline {
       }
     }
     stage('AS → ANPR: Lista y detalle') {
-      when { expression { params.AS_ANPR_LISTA } }
-      steps { integracion('as-anpr') }
+      when { expression { params.LISTA } }
+      steps { integracion('lista') }
     }
     stage('AS → ANPR: Alarmas') {
-      when { expression { params.AS_ANPR_ALARMAS } }
+      when { expression { params.ALARMAS } }
       steps { integracion('alarmas') }
     }
   }
@@ -65,7 +66,7 @@ pipeline {
     always {
       junit allowEmptyResults: true, testResults: 'playwright-report/junit/*.xml'
       script {
-        def reportes = ['as-anpr': 'AS → ANPR Lista', 'alarmas': 'AS → ANPR Alarmas']
+        def reportes = ['lista': 'AS → ANPR Lista', 'alarmas': 'AS → ANPR Alarmas']
         reportes.each { archivo, nombre ->
           if (fileExists("playwright-report/${archivo}/index.html")) {
             publishHTML(target: [

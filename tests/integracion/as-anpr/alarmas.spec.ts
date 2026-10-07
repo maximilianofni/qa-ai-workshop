@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { login, abrirPatentes, buscarPatente, crearPatente, asociarLista, eliminarPatente } from '../anpr/administracion';
-import { alarmasEnWidget, alarmaEnWidget, atenderAlarma, fechaDeAlarma } from '../anpr/alarmas';
-import { abrirAuditoriaDeAlarmas, buscar, alarmaEnAuditoria } from '../anpr/auditoria';
-import { verificarAsLibre, instalarAs, desinstalarAs, mitadDePantalla, maximizar, abrirVisor } from './as';
+import { login, abrirPatentes, buscarPatente, crearPatente, asociarLista, eliminarPatente } from '../../anpr/administracion';
+import { alarmasEnWidget, alarmaEnWidget, atenderAlarma, fechaDeAlarma } from '../../anpr/alarmas';
+import { abrirAuditoriaDeAlarmas, buscar, alarmaEnAuditoria } from '../../anpr/auditoria';
+import { verificarAsLibre, instalarAs, desinstalarAs, mitadDePantalla, maximizar, abrirVisor } from '../as';
 
 // Integración AS → ANPR con alarmas: las patentes cargadas en una lista con alarma, al ser
 // detectadas por AS, generan en ANPR alarmas Pendientes que el operador atiende y cierra.

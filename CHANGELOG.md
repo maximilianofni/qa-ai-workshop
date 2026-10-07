@@ -27,8 +27,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
   (INT-ANPR-01/02); patentes en una lista con alarma generan alarmas que se atienden y quedan en
   Auditoría (INT-ALARMA-01/02/03). Con `--headed` se ven ANPR y el video de AS lado a lado.
   Comandos `test:integracion` y `test:integracion:headed`.
-- **Jenkins**: pipeline aparte para las integraciones (`Jenkinsfile.integracion`), con una etapa por
-  integración y la opción de ver el navegador en pantalla.
+- **Jenkins**: pipeline aparte para la integración AS → ANPR (`Jenkinsfile.integracion-as-anpr`, job
+  `integracion-as-anpr`), con una etapa por circuito y la opción de ver el navegador en pantalla.
+  Cada integración nueva tiene su propia carpeta de tests, su Jenkinsfile y su job.
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.
