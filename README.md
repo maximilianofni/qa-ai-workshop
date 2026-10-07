@@ -285,6 +285,20 @@ CHANGELOG.md            Historial de versiones
 
 ## Integración continua (CI)
 
+El proyecto tiene dos integraciones que se complementan:
+
+| | GitHub Actions | Jenkins |
+|---|---|---|
+| **Dónde corre** | En los servidores de GitHub | En una PC con acceso a la red interna (hoy, la PC de la demo) |
+| **Cuándo** | Automáticamente, en cada push y pull request | Al lanzar el build (*Build with Parameters*) |
+| **Qué hace** | **Valida** que los tests de Playwright, Cypress y Selenium compilen, sin ejecutarlos | **Ejecuta** los tests contra los ambientes de testing: ANPR, Biblioteca Digital, AS y VMS |
+| **Resultado** | Avisa al instante si un cambio rompe un test | Reporte por producto e historial de resultados entre builds |
+
+Los servidores de GitHub no llegan a los ambientes de testing (están en la red interna) y no
+tienen VMS instalado: por eso ahí solo se valida, y la ejecución completa corre en Jenkins.
+
+### GitHub Actions
+
 El pipeline [.github/workflows/ci.yml](.github/workflows/ci.yml) tiene dos etapas:
 
 1. **Validación** (en cada push y pull request): instala dependencias y verifica que los tests
@@ -296,7 +310,7 @@ El pipeline [.github/workflows/ci.yml](.github/workflows/ci.yml) tiene dos etapa
    - Cargar las variables `BASE_URL`, `BD_BASE_URL` y `E2E_ENABLED=true` en *Settings → Secrets and variables → Actions → Variables*.
    - Cargar los secretos `APP_USER`, `APP_PASSWORD`, `BD_USER` y `BD_PASSWORD` en *Settings → Secrets and variables → Actions → Secrets*.
 
-## Jenkins (demo local)
+### Jenkins (demo local)
 
 El [Jenkinsfile](Jenkinsfile) corre los tests de Playwright con una etapa por producto (ANPR,
 Biblioteca Digital, AS y VMS), elegibles al lanzar el build, y publica un reporte por producto.
@@ -338,10 +352,30 @@ En cada build se ve el avance etapa por etapa. En el menú del build quedan *Tes
 historial de casos entre builds) y un **Reporte** por producto, con capturas, videos y trazas.
 
 - Jenkins baja el código de GitHub: lo que no esté pusheado no se prueba.
-- Durante la etapa de VMS se abren las aplicaciones en el escritorio: no usar el mouse ni el
-  teclado.
+- Durante la etapa de VMS las aplicaciones se abren en el escritorio y pasan al frente solas
+  (aunque se esté mirando el avance en el navegador): no usar el mouse ni el teclado mientras tanto.
 - `npm run jenkins` desactiva la política de seguridad de contenido (CSP) de Jenkins para que el
   reporte de Playwright se vea. Está pensado solo para la demo local.
+
+### Llevarlo a la empresa
+
+Con Jenkins o con el *self-hosted runner* de GitHub, la ejecución completa necesita lo mismo:
+un equipo dentro de la red interna. ANPR, Biblioteca Digital y AS corren en cualquier equipo
+(incluso en Linux con Docker, con la imagen oficial de Playwright). **VMS necesita una PC o VM
+Windows con escritorio**, porque los tests abren las aplicaciones, hacen clic y leen la pantalla,
+igual que una persona. Esa máquina se prepara así:
+
+- **Inicio de sesión automático (auto-logon)**: con la herramienta *Autologon* de Microsoft
+  (Sysinternals), para que después de un reinicio (por ejemplo por Windows Update) la sesión
+  vuelva a quedar abierta sin que nadie escriba la contraseña.
+- **El agente corre dentro de esa sesión, no como servicio de Windows**: un servicio corre en una
+  sesión aparte, sin escritorio visible, y las aplicaciones de VMS no se verían. El agente (de
+  Jenkins o el runner de GitHub) se inicia con un `.bat` en la carpeta *Inicio* del usuario
+  (`shell:startup`).
+- **La pantalla no se bloquea**: pantalla y suspensión en *Nunca* y sin protector de pantalla. Si
+  se entra por Escritorio remoto, al desconectarse la sesión se bloquea: entrar por la consola de
+  la VM (VMware o Hyper-V) o, antes de cerrar el Escritorio remoto, ejecutar
+  `tscon %sessionname% /dest:console`.
 
 ## Versiones y releases
 

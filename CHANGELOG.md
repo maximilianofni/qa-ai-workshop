@@ -19,12 +19,20 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
   VMS-CFG-LOGIN-01/02/03). Comando `test:vms`.
 - **Jenkins**: `Jenkinsfile` con una etapa por producto, credenciales de Jenkins y un reporte HTML
   por producto. Comando `jenkins` para levantarlo en la PC de la demo.
+- README: comparación entre GitHub Actions y Jenkins, y cómo preparar una PC Windows como agente
+  para correr VMS en la empresa.
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.
 - Playwright usa un proyecto por producto (`anpr` y `biblioteca-digital`), cada uno con su URL.
 - La comparación de herramientas corre solo los casos de ANPR.
 - `package.json` habilita los scripts de instalación de Cypress y esbuild (requerido por npm 11).
+
+### Corregido
+- VMS: la captura y el OCR leían la ventana que estuviera encima (por ejemplo el navegador con
+  Jenkins); ahora se captura la ventana de VMS directamente.
+- VMS: el botón de login no respondía si la ventana no estaba activa (al correr desde Jenkins);
+  ahora la ventana pasa al frente antes de hacer clic.
 
 ## [1.4.0] - 2026-10-02
 
