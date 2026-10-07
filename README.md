@@ -73,8 +73,8 @@ de casos, explicación funcional de cada test y un **resumen ejecutivo para la l
 | LOGIN-02 | Login con contraseña incorrecta muestra el mensaje de error exacto | ✅ | ✅ | ✅ | ✅ | #4 |
 | LOGIN-03 | Login con campos vacíos muestra el mensaje de error exacto | ✅ | ✅ | ✅ | ✅ | #4 |
 | LOGOUT-01 | Cerrar sesión vuelve al login y bloquea el acceso al panel | ✅ | ✅ | ✅ | ✅ | #3 |
-| ADM-PAT-01 | Alta de la patente AC832JA (Mercosur - Autos) asociada a la lista "LISTA TESTING AS" | ✅ | – | – | – | |
-| ADM-PAT-02 | Baja de la patente: al buscarla dice "No hay resultados" | ✅ | – | – | – | |
+| ADM-PAT-01 | Alta de la patente AC832JA (Mercosur - Autos) asociada a la lista "LISTA TESTING AS" | ✅ | – | – | – | #23 |
+| ADM-PAT-02 | Baja de la patente: al buscarla dice "No hay resultados" | ✅ | – | – | – | #24 |
 
 Las acciones de Administración (buscar, crear, asociar a una lista y eliminar patentes), del widget
 Alarmas y de Auditoría están en `tests/anpr/administracion.ts`, `alarmas.ts` y `auditoria.ts`, y
@@ -145,13 +145,13 @@ Prueban el circuito completo entre productos: la analítica de AS detecta patent
 donde las ve el operador. El video siempre da las mismas patentes en el mismo orden
 (AC832JA, NEW157, HKX319, HBB384, NAM903), pero los tests usan las que realmente detecta AS en sus logs.
 
-| ID | Caso |
-|---|---|
-| INT-ANPR-01 | Las 5 patentes que detecta AS llegan como capturas nuevas al widget Lista de ANPR, con la cámara del AS de testing |
-| INT-ANPR-02 | El detalle de una de ellas muestra patente, fuente de captura, cámara y nivel de confianza |
-| INT-ALARMA-01 | AC832JA, NEW157 y HKX319, dadas de alta en "LISTA TESTING AS", al ser detectadas generan alarmas "alarma testing AS" Pendientes |
-| INT-ALARMA-02 | Atender cada alarma (Atender → En curso → "Válida - Alarma válida" con comentario → Guardar) la deja Cerrada |
-| INT-ALARMA-03 | En Auditoría → Alarmas aparecen las tres Cerradas, con usuario y acción; el detalle muestra la observación y el historial |
+| ID | Caso | Issue |
+|---|---|---|
+| INT-ANPR-01 | Las 5 patentes que detecta AS llegan como capturas nuevas al widget Lista de ANPR, con la cámara del AS de testing | #25 |
+| INT-ANPR-02 | El detalle de una de ellas muestra patente, fuente de captura, cámara y nivel de confianza | #26 |
+| INT-ALARMA-01 | AC832JA, NEW157 y HKX319, dadas de alta en "LISTA TESTING AS", al ser detectadas generan alarmas "alarma testing AS" Pendientes | #27 |
+| INT-ALARMA-02 | Atender cada alarma (Atender → En curso → "Válida - Alarma válida" con comentario → Guardar) la deja Cerrada | #28 |
+| INT-ALARMA-03 | En Auditoría → Alarmas aparecen las tres Cerradas, con usuario y acción; el detalle muestra la observación y el historial | #29 |
 
 - Con `--headed`, mientras AS detecta se ven lado a lado ANPR (izquierda) y el visor de AS con el
   video (derecha); el resto de los pasos corre con el navegador maximizado.
