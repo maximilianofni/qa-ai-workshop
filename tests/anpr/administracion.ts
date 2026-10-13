@@ -20,15 +20,24 @@ export async function abrirPatentes(page: Page) {
 
 /** Busca la patente con el buscador (filtra al apretar Enter) y devuelve su fila */
 export async function buscarPatente(page: Page, patente: string): Promise<Locator> {
+  const sinResultados = page.getByText('No hay resultados que coincidan');
+  // Si quedó "No hay resultados" de la búsqueda anterior (por ejemplo, después de una baja), se vuelve
+  // a la lista completa: si no, ese mensaje viejo se confunde con el resultado de esta búsqueda
+  if (await sinResultados.isVisible()) {
+    await page.locator('#search_bar').fill('');
+    await page.locator('#search_bar').press('Enter');
+    await expect(sinResultados).toBeHidden({ timeout: 10_000 });
+  }
+
   await page.locator('#search_bar').fill(patente);
   await page.locator('#search_bar').press('Enter');
 
   const nombres = page.locator('.admin_abm_plates .result_list:visible .admin_abm_result_list_name');
   // Espera a que la tabla muestre el resultado de esta búsqueda: la patente o ningún resultado
   await expect(async () => {
-    const sinResultados = await page.getByText('No hay resultados que coincidan').isVisible();
+    const vacia = await sinResultados.isVisible();
     const filas = (await nombres.allTextContents()).map((n) => n.trim());
-    expect(sinResultados || (filas.length > 0 && filas.every((n) => n.includes(patente)))).toBe(true);
+    expect(vacia ||(filas.length > 0 && filas.every((n) => n.includes(patente)))).toBe(true);
   }).toPass({ timeout: 10_000 });
 
   return page.locator('.admin_abm_plates .result_list:visible').filter({
