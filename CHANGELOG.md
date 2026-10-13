@@ -30,6 +30,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - **Jenkins**: pipeline aparte para la integración AS → ANPR (`Jenkinsfile.integracion-as-anpr`, job
   `integracion-as-anpr`), con una etapa por circuito y la opción de ver el navegador en pantalla.
   Cada integración nueva tiene su propia carpeta de tests, su Jenkinsfile y su job.
+- **Integración AS → ANPR – base de datos** (INT-ALARMA-04): se verifican en PostgreSQL las capturas,
+  las alarmas atendidas con su historial, que no haya duplicados y que las patentes queden dadas de
+  baja (`tests/anpr/bd.ts`, solo lectura). Para la demo, la consulta se ve en pgAdmin
+  (`tests/anpr/pgadmin.ts`). Nuevas variables `ANPR_DB_*` y `PGADMIN_*` en el `.env`.
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.
@@ -39,6 +43,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - `package.json` habilita los scripts de instalación de Cypress y esbuild (requerido por npm 11).
 
 ### Corregido
+- ANPR: al buscar una patente después de una baja, el mensaje "No hay resultados" que quedaba se
+  tomaba como resultado de la búsqueda nueva; la limpieza de la integración de alarmas borraba solo
+  la primera patente.
 - VMS: la captura y el OCR leían la ventana que estuviera encima (por ejemplo el navegador con
   Jenkins); ahora se captura la ventana de VMS directamente.
 - VMS: el botón de login no respondía si la ventana no estaba activa (al correr desde Jenkins);

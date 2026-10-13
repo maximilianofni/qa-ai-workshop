@@ -152,6 +152,7 @@ donde las ve el operador. El video siempre da las mismas patentes en el mismo or
 | INT-ALARMA-01 | AC832JA, NEW157 y HKX319, dadas de alta en "LISTA TESTING AS", al ser detectadas generan alarmas "alarma testing AS" Pendientes | #27 |
 | INT-ALARMA-02 | Atender cada alarma (Atender → En curso → "Válida - Alarma válida" con comentario → Guardar) la deja Cerrada | #28 |
 | INT-ALARMA-03 | En Auditoría → Alarmas aparecen las tres Cerradas, con usuario y acción; el detalle muestra la observación y el historial | #29 |
+| INT-ALARMA-04 | En la base de ANPR quedan las capturas (cámara, formato, tipo de alarma), las alarmas "Atendida Cerrada" con su historial completo, sin duplicados; al terminar, las patentes quedan dadas de baja | #31 |
 
 - Con `--headed`, mientras AS detecta se ven lado a lado ANPR (izquierda) y el visor de AS con el
   video (derecha); el resto de los pasos corre con el navegador maximizado.
@@ -159,6 +160,15 @@ donde las ve el operador. El video siempre da las mismas patentes en el mismo or
 - Usan la misma VM que los tests de AS: corren de a uno (`--workers=1`) y, si AS ya está instalado
   (otra ejecución en curso), se frenan con un aviso.
 - Requieren `AS_HOST` y `APP_USER` en el `.env`; si no, se saltean.
+- INT-ALARMA-04 consulta la base de ANPR (PostgreSQL) con una conexión de solo lectura
+  (`ANPR_DB_HOST`, `ANPR_DB_USER`, `ANPR_DB_PASSWORD`); sin esos datos se saltea. Para que se vea,
+  también ejecuta la consulta del historial en pgAdmin (`PGADMIN_URL`, `PGADMIN_USER`,
+  `PGADMIN_PASSWORD`): pgAdmin solo muestra, lo que se verifica es la consulta directa. Si pgAdmin
+  falla, el test sigue y deja un aviso en el reporte. La cuenta de pgAdmin es compartida: el test cierra
+  su pestaña sin guardar.
+- **Hallazgo (#32):** mirando la base se vio que la limpieza borraba solo la primera patente: después
+  de una baja quedaba "No hay resultados" y la búsqueda siguiente lo tomaba como su resultado. Por
+  pantalla el test seguía en verde. Corregido en `buscarPatente`.
 - **Hallazgo:** el reloj del servidor de ANPR está alrededor de un minuto adelantado respecto de las
   PCs. Como Auditoría busca por defecto "la última hora" según el reloj de la PC, una alarma recién
   atendida no aparece hasta que pasa ese minuto. El test carga a mano el rango de fecha de captura.
