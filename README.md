@@ -29,6 +29,12 @@ diferencia de un asistente de chat, el agente **ejecuta tareas**:
 
 > Explicación para áreas no técnicas: [Antigravity aplicado a QA y Testing](docs/antigravity-para-testing.md).
 
+Para las tareas fuera del navegador usamos además **Claude Code**, el agente de Anthropic que
+trabaja desde la terminal: las integraciones entre productos (SSH, base de datos, la aplicación de
+escritorio de VMS), los pipelines de Jenkins y las pruebas con Docker y Kubernetes. Cada agente para
+su tarea: Antigravity prueba la web y deja evidencia visual; Claude Code ejecuta comandos, scripts y
+pipelines.
+
 ## Flujo de trabajo: QA + agente de IA
 
 El equipo de QA define **qué** se prueba y **cuál** es el resultado esperado; el agente se
@@ -346,6 +352,10 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 | Todas | `npm run comparar` | Corre los mismos casos en cada herramienta y abre una página con la comparación de tiempos |
 | Todas | `npm run comparar:ver` | Vuelve a abrir la última comparación |
 | Jenkins | `npm run jenkins` | Levanta Jenkins en <http://localhost:8080> para la demo (ver [Jenkins](#jenkins-demo-local)) |
+| Docker | `npm run docker:build` | Arma la imagen `qa-ai-workshop-tests` con Node, Chrome y los tests (sin credenciales) |
+| Docker | `npm run docker:test` | Corre ANPR y Biblioteca Digital dentro de un contenedor; reporte en `playwright-report/docker` |
+| Kubernetes | `npm run k8s:test` | Corre ANPR y Biblioteca Digital como dos Jobs en paralelo (`k8s/tests.yaml`) |
+| Kubernetes | `npm run k8s:limpiar` | Borra los Jobs y el Secret de las credenciales |
 
 Cuando un test falla, el reporte guarda captura de pantalla, video y traza para analizar el error.
 
@@ -370,6 +380,8 @@ prompts/                Prompts para el agente de IA (uno por requerimiento)
 .github/workflows/      Pipelines de CI y releases
 Jenkinsfile             Pipeline de Jenkins (una etapa por producto)
 Jenkinsfile.integracion-*  Pipelines de Jenkins de cada integración (as-anpr, vms-bd, as-vms)
+Dockerfile              Imagen de Docker con los tests de Playwright
+k8s/                    Jobs de Kubernetes para correr los tests en paralelo
 playwright.config.ts    Configuración de Playwright (navegador, reportes, evidencias)
 cypress.config.ts       Configuración de Cypress
 .mocharc.json           Configuración de Mocha para Selenium
@@ -477,6 +489,20 @@ pipeline de productos, necesitan la PC desbloqueada y sin usar el mouse mientras
 - Corre sin reintentos: cada intento vuelve a instalar AS y a crear datos en ANPR.
 - No lanzarlo a la vez que la etapa AS del pipeline de productos ni que otra integración con AS:
   todos usan la VM de AS.
+
+### Docker y Kubernetes
+
+La imagen del [Dockerfile](Dockerfile) tiene Node, Google Chrome y los tests de Playwright: corren
+igual en cualquier PC, en Jenkins o en Kubernetes. Las credenciales no entran en la imagen: se pasan
+al correrla (el `.env` en Docker, un *Secret* en Kubernetes). En Kubernetes, [k8s/tests.yaml](k8s/tests.yaml)
+define un Job por producto, que corren en paralelo.
+
+- Para la demo usamos **Rancher Desktop** (gratis y open source), con *dockerd (moby)* y Kubernetes
+  activado. Docker Desktop requiere licencia paga en empresas de más de 250 empleados o 10 millones
+  de dólares de facturación; el mismo Dockerfile y los mismos comandos sirven para los dos.
+- Corrida de referencia: 12/12 tests en Docker en 46 segundos; en Kubernetes, en paralelo, 35.
+- VMS no corre en contenedores: necesita el escritorio de Windows.
+- Explicación para el equipo: [CI/CD para testers](docs/ci-cd-para-testers.md).
 
 ### Llevarlo a la empresa
 

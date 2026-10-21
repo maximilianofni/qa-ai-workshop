@@ -177,6 +177,47 @@ mouse: para una demo en vivo conviene mostrar un build ya hecho.
 
 ---
 
+## 7. Docker y Kubernetes
+
+Los mismos tests de ANPR y Biblioteca Digital, empaquetados en una imagen de Docker: corren igual en
+cualquier PC, y en Kubernetes como dos Jobs en paralelo. Para explicar qué es cada herramienta y
+responder preguntas: [CI/CD para testers](ci-cd-para-testers.md).
+
+**Requiere:** [Rancher Desktop](https://rancherdesktop.io) abierto, con *dockerd (moby)* y
+Kubernetes activado (gratis; Docker Desktop requiere licencia en empresas grandes). Si la consola no
+encuentra `docker` o `kubectl`, abrir una consola nueva después de instalar Rancher Desktop.
+
+```
+npm run docker:build
+```
+
+Arma la imagen `qa-ai-workshop-tests` (Node, Chrome y los tests, sin credenciales). La primera vez
+tarda unos 20 minutos porque descarga la imagen de Playwright; después, segundos.
+
+```
+npm run docker:test
+```
+
+Corre ANPR y Biblioteca Digital dentro de un contenedor (12 tests, menos de un minuto). Las
+credenciales salen del `.env`; el reporte queda en `playwright-report/docker/index.html`.
+
+```
+npm run k8s:test
+```
+
+Carga las credenciales como Secret de Kubernetes y lanza dos Jobs en paralelo, uno por producto
+(`k8s/tests.yaml`). Muestra los pods, el resultado de cada Job y sus logs (unos 35 segundos).
+
+```
+npm run k8s:limpiar
+```
+
+Borra los Jobs y el Secret al terminar la demo.
+
+VMS no corre en contenedores: necesita el escritorio de Windows.
+
+---
+
 ## Extra: tests de login de VMS
 
 Login correcto, contraseña incorrecta y usuario inválido en Control Center y Configurator.

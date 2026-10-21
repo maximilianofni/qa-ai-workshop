@@ -44,6 +44,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - VMS: OCR con la posición de cada texto, clic con el mouse real, listas desplegables, formularios
   web embebidos y modales (`tests/vms/windows.ts`).
 - Guía con los comandos del workshop en orden (`docs/comandos-workshop.md`).
+- **Docker y Kubernetes**: imagen con los tests de Playwright (`Dockerfile`) y Jobs de Kubernetes en
+  paralelo (`k8s/tests.yaml`). Comandos `docker:build`, `docker:test`, `k8s:test` y `k8s:limpiar`.
+  Probado con Rancher Desktop.
+- **Jenkins**: pipelines de las integraciones VMS → Biblioteca Digital y AS → VMS.
+- Guía de CI/CD para testers (`docs/ci-cd-para-testers.md`) y presentación del workshop
+  (`docs/Workshop-QA-IA.pptx`).
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.
