@@ -34,6 +34,16 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
   las alarmas atendidas con su historial, que no haya duplicados y que las patentes queden dadas de
   baja (`tests/anpr/bd.ts`, solo lectura). Para la demo, la consulta se ve en pgAdmin
   (`tests/anpr/pgadmin.ts`). Nuevas variables `ANPR_DB_*` y `PGADMIN_*` en el `.env`.
+- **Integración VMS → Biblioteca Digital** (INT-EXT-01/02): extracción remota de 10 minutos desde
+  Control Center y verificación del proyecto Finalizado en Biblioteca Digital, que se ve en el
+  navegador durante la prueba. Acciones de Control Center en `tests/vms/control-center.ts` y de
+  Biblioteca Digital en `tests/biblioteca-digital/biblioteca.ts`.
+- **Integración AS → VMS (Residuos)** (INT-RES-01): programa la analítica de residuos desde la hora
+  del servidor de AS, abre en Control Center el modal de cada evento que llega y corta al tercero;
+  el JSON de AS se respalda y se restaura.
+- VMS: OCR con la posición de cada texto, clic con el mouse real, listas desplegables, formularios
+  web embebidos y modales (`tests/vms/windows.ts`).
+- Guía con los comandos del workshop en orden (`docs/comandos-workshop.md`).
 
 ### Cambiado
 - Los tests de ANPR en Playwright pasan a `tests/anpr/`: cada producto tiene su carpeta.
@@ -43,6 +53,10 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 - `package.json` habilita los scripts de instalación de Cypress y esbuild (requerido por npm 11).
 
 ### Corregido
+- VMS: los tests de login fallaban si quedaba elegido otro sistema en la app; ahora eligen el de
+  `VMS_SISTEMA`.
+- VMS: los mensajes de error de los tests mostraban la contraseña recordada (la app la expone a la
+  accesibilidad); ahora se oculta.
 - ANPR: al buscar una patente después de una baja, el mensaje "No hay resultados" que quedaba se
   tomaba como resultado de la búsqueda nueva; la limpieza de la integración de alarmas borraba solo
   la primera patente.

@@ -135,6 +135,10 @@ manejan las ventanas con **UI Automation de Windows** desde PowerShell, sin inst
 - Corren de a uno (`--workers=1`): dos Control Center abiertos a la vez se pisan.
 - Los logins fallidos corren primero: con "Recordar" tildado la app guarda el último usuario
   escrito, y así queda recordando el usuario válido.
+- Si quedó elegido otro sistema (la app recuerda el último usado), el test elige el de `VMS_SISTEMA`.
+- **Hallazgo (#36):** la pantalla de login expone la contraseña recordada en texto plano a la
+  accesibilidad de Windows (cualquier programa puede leerla). Los tests la sacan de lo que leen para
+  que no aparezca en los errores, el reporte ni los logs.
 - Cada test adjunta al reporte una captura de la ventana.
 - Solo corren en Windows y con `VMS_USER` en el `.env`; si no, se saltean.
 
@@ -172,6 +176,47 @@ donde las ve el operador. El video siempre da las mismas patentes en el mismo or
 - **Hallazgo:** el reloj del servidor de ANPR está alrededor de un minuto adelantado respecto de las
   PCs. Como Auditoría busca por defecto "la última hora" según el reloj de la PC, una alarma recién
   atendida no aparece hasta que pasa ese minuto. El test carga a mano el rango de fecha de captura.
+
+## Casos automatizados – Integración VMS → Biblioteca Digital
+
+Desde Control Center se pide una extracción remota de una cámara con grabación y se verifica que
+llegue a Biblioteca Digital. Control Center se maneja como una persona: el menú, el árbol de cámaras
+y el formulario web de "Información adicional" (CefSharp, no accesible) se encuentran con el **OCR de
+Windows** o por su posición y se usan con el mouse y el teclado.
+
+| ID | Caso | Issue |
+|---|---|---|
+| INT-EXT-01 | En Control Center (system 145): Extracciones → "camara Balcon, Channel 1" → período de 10 minutos (desde hace media hora) → Extracción remota, organismo Testing, nombre `QA-AUTO <fecha-hora>` y comentario → Información adicional (ubicación, causa, carátula y delito) → CONFIRMAR; la extracción queda en el panel Extracciones | #33 |
+| INT-EXT-02 | En Biblioteca Digital el proyecto aparece con la descripción y 1 cámara y pasa a Finalizado; el detalle muestra el organismo y la extracción de la cámara, Finalizada y con tamaño | #34 |
+
+- La web de Biblioteca Digital se abre siempre (sin `--headed`) al principio y vuelve a quedar a la
+  vista cuando Control Center termina.
+- Mientras trabaja Control Center (unos 2 minutos) no usar el mouse ni el teclado; la PC tiene que
+  estar desbloqueada (con la sesión bloqueada Control Center no arranca: "Could not initialize
+  Direct3D").
+- Las extracciones quedan en Biblioteca con el prefijo `QA-AUTO` y vencen solas.
+- **Hallazgos:** Control Center borra los ":" del nombre sin avisar; en Biblioteca las fechas de
+  "Grabaciones" están en formato mes/día/año, distinto del resto de la aplicación.
+- Requieren Windows, `VMS_USER` y `BD_USER` en el `.env`; si no, se saltean.
+
+## Casos automatizados – Integración AS → VMS (Residuos)
+
+La analítica de residuos de AS (`litter_detector`) analiza una cámara de VMS en horarios programados
+y manda cada evento a VMS, donde se ve en Control Center.
+
+| ID | Caso | Issue |
+|---|---|---|
+| INT-RES-01 | Con "vlc_16_residuos, Channel 1" abierta en Control Center, se programan 7 ejecuciones (cada 30 segundos, desde la hora del servidor de AS) en `server_config_Residuos_VMS_145.json` y se instala AS; cada evento "Desborde de residuos detectado" que llega se abre en su modal "Información del evento" (fuente, tipo, descripción y foto) y se corta al tercero. Los logs de AS confirman una ejecución correcta por evento | #35 |
+
+- Antes de editar el JSON se guarda una copia; al terminar, aunque falle, AS queda desinstalado y el
+  JSON vuelve a tener sus horarios originales.
+- No usar el mouse ni el teclado durante la prueba (unos 4 minutos): abre la cámara y los modales con
+  clics. Los eventos del panel se leen de la imagen de la ventana, aunque haya otra encima.
+- Usa la misma VM que los tests de AS: si AS ya está instalado, se frena con un aviso.
+- **Hallazgo (#37):** en varias corridas AS salteó 1 o 2 de 7 ejecuciones ("Connection was
+  established but no frame received" → "skipped for today"): no recibe imagen de la cámara a tiempo.
+  El test lo informa como aviso en el reporte.
+- Requieren Windows, `VMS_USER` y `AS_HOST` en el `.env`; si no, se saltean.
 
 ## Comparación de herramientas
 
@@ -284,8 +329,9 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 | Playwright | `npm run test:as` | Instala AS, espera las patentes y desinstala (por SSH) |
 | Playwright | `npm run test:as:headed` | Lo mismo, mostrando el visor de patentes y cada patente en la consola |
 | Playwright | `npm run test:vms` | Abre Control Center y Configurator y prueba el login (solo Windows) |
-| Playwright | `npm run test:integracion` | Corre las integraciones AS → ANPR (lista, detalle y alarmas) |
+| Playwright | `npm run test:integracion` | Corre todas las integraciones (AS → ANPR, VMS → Biblioteca Digital y AS → VMS Residuos) |
 | Playwright | `npm run test:integracion:headed` | Lo mismo, con ANPR y el video de AS lado a lado en pantalla |
+| Playwright | `npm run test:integracion -- as-anpr` | Una sola integración: la carpeta va como filtro (`as-anpr`, `vms-bd` o `as-vms`) |
 | Playwright | `npm run report` | Abre el reporte HTML de la última ejecución |
 | Cypress | `npm run cy:run` | Corre todos los tests sin mostrar el navegador |
 | Cypress | `npm run cy:headed` | Corre los tests con Chrome visible |
@@ -303,6 +349,9 @@ el proyecto de Katalon no guarda usuario ni contraseña.
 
 Cuando un test falla, el reporte guarda captura de pantalla, video y traza para analizar el error.
 
+La guía con los comandos de la demo, en el orden del workshop, está en
+[docs/comandos-workshop.md](docs/comandos-workshop.md).
+
 ## Estructura del proyecto
 
 ```
@@ -310,7 +359,7 @@ tests/anpr/             Casos de ANPR con Playwright
 tests/biblioteca-digital/  Casos de Biblioteca Digital con Playwright
 tests/as/               Casos de AS (servidor de analíticas) por SSH
 tests/vms/              Casos de VMS (aplicaciones de escritorio) con UI Automation y OCR
-tests/integracion/      Integraciones entre productos: una carpeta por integración (as-anpr/)
+tests/integracion/      Integraciones entre productos: una carpeta por integración (as-anpr/, vms-bd/, as-vms/)
 cypress/e2e/            Los mismos casos automatizados con Cypress
 selenium/tests/         Los mismos casos automatizados con Selenium (Mocha)
 katalon/                Proyecto Katalon Studio con los mismos casos (abrir ANPR.prj desde el IDE)
