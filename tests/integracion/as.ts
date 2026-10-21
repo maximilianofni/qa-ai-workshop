@@ -1,14 +1,25 @@
 import { expect, Page, Browser } from '@playwright/test';
 import { ejecutar } from '../as/ssh';
 
-/** Pasos de AS compartidos por los tests de integración con ANPR */
+/** Pasos de AS compartidos por los tests de integración (con ANPR y con VMS) */
 
 const DIR = process.env.AS_DIR!;
 const VERSION = '2.4-rc1';
+
+/** Configuración con la que se instala AS (un JSON de AS_DIR) y opciones extra del instalador */
+export interface Analitica {
+  config: string;
+  opciones?: string;
+}
+
 // A diferencia de server_config_ANPR.json, esta configuración manda cada patente al webhook de ANPR
-const INSTALADOR =
-  `./installer${VERSION}.sh -a cuda -v ${VERSION} -j ./server_config_ANPR_capture.json ` +
-  `-f ${DIR}/videos_de_prueba -l ${DIR}/logs/`;
+const ANPR: Analitica = {
+  config: 'server_config_ANPR_capture.json',
+  opciones: `-f ${DIR}/videos_de_prueba -l ${DIR}/logs/`,
+};
+
+const instalador = ({ config, opciones }: Analitica) =>
+  `./installer${VERSION}.sh -a cuda -v ${VERSION} -j ./${config}${opciones ? ` ${opciones}` : ''}`;
 
 interface Deteccion {
   date: string;
@@ -22,15 +33,15 @@ export async function verificarAsLibre() {
 }
 
 /** Instala la analítica y devuelve la hora del servidor al empezar (para leer solo los logs nuevos) */
-export async function instalarAs(): Promise<{ inicio: number; salida: string }> {
+export async function instalarAs(analitica = ANPR): Promise<{ inicio: number; salida: string }> {
   const inicio = Number((await ejecutar('date +%s')).salida);
-  const { salida } = await ejecutar(`bash -c 'cd ${DIR} && ${INSTALADOR} -i'`, { sudo: true });
+  const { salida } = await ejecutar(`bash -c 'cd ${DIR} && ${instalador(analitica)} -i'`, { sudo: true });
   expect(salida).toContain('Installation complete.');
   return { inicio, salida };
 }
 
-export async function desinstalarAs() {
-  const { salida } = await ejecutar(`bash -c 'cd ${DIR} && ${INSTALADOR} -u'`, { sudo: true });
+export async function desinstalarAs(analitica = ANPR) {
+  const { salida } = await ejecutar(`bash -c 'cd ${DIR} && ${instalador(analitica)} -u'`, { sudo: true });
   expect(salida).toContain('Service has been uninstalled.');
 }
 
@@ -46,6 +57,55 @@ export async function patentesDetectadas(inicio: number): Promise<string[]> {
     .map((linea) => JSON.parse(linea) as Deteccion)
     .filter((d) => Date.parse(d.date) / 1000 >= inicio)
     .map((d) => d.license_plates[0].text);
+}
+
+/** Hora del servidor de AS: su reloj no coincide con el de las PCs */
+export async function horaDelServidor(): Promise<Date> {
+  return new Date(Number((await ejecutar('date +%s')).salida) * 1000);
+}
+
+/**
+ * Programa la analítica de residuos: reemplaza los últimos horarios (`execution_time`) de
+ * `litter_detector_tasks` por los indicados (HH:MM:SS, hora del servidor). Antes guarda una copia
+ * del JSON para dejarlo como estaba con `restaurarConfig`.
+ */
+export async function programarResiduos(config: string, horarios: string[]) {
+  const ruta = `${DIR}/${config}`;
+  const json = JSON.parse((await ejecutar(`cat ${ruta}`)).salida);
+  const tareas: { execution_time: string }[] = json.cameras[0].programmable_tasks.litter_detector_tasks;
+  tareas.splice(tareas.length - horarios.length, horarios.length, ...horarios.map((h) => ({ execution_time: h })));
+
+  // -n: si quedó una copia de una ejecución que no terminó, esa es la original y no se pisa
+  await ejecutar(`cp -n ${ruta} ${ruta}.qa-respaldo`);
+  const base64 = Buffer.from(JSON.stringify(json, null, 2)).toString('base64');
+  const { codigo } = await ejecutar(`bash -c 'echo ${base64} | base64 -d > ${ruta}'`);
+  expect(codigo, `Escribir ${config}`).toBe(0);
+}
+
+/**
+ * Resultado de las ejecuciones programadas de la analítica de residuos desde `desde` (hora del
+ * servidor), según el log del servicio: las que terminaron bien y las que AS salteó (por ejemplo
+ * porque no recibió imagen de la cámara a tiempo).
+ */
+export async function ejecucionesResiduos(desde: Date): Promise<{ correctas: number; salteadas: number }> {
+  const dos = (n: number) => String(n).padStart(2, '0');
+  const fecha =
+    `${desde.getFullYear()}-${dos(desde.getMonth() + 1)}-${dos(desde.getDate())} ` +
+    `${dos(desde.getHours())}:${dos(desde.getMinutes())}:${dos(desde.getSeconds())}`;
+  const { salida } = await ejecutar(`journalctl -u uip-analytics-server --since "${fecha}" --no-pager -o cat`, {
+    sudo: true,
+  });
+  const contar = (texto: string) => salida.split('\n').filter((l) => l.includes(texto)).length;
+  return {
+    correctas: contar('Programmable Task executed correctly.'),
+    salteadas: contar('has been skipped for today'),
+  };
+}
+
+/** Deja el JSON como estaba antes de `programarResiduos` */
+export async function restaurarConfig(config: string) {
+  const ruta = `${DIR}/${config}`;
+  await ejecutar(`bash -c 'if [ -f ${ruta}.qa-respaldo ]; then mv ${ruta}.qa-respaldo ${ruta}; fi'`);
 }
 
 /**

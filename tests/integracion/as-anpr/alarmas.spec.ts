@@ -205,6 +205,8 @@ test(`INT-ALARMA-04 | Las capturas y las alarmas atendidas de ${NOMBRES} quedan 
   page,
 }) => {
   test.skip(!hayBd(), 'Falta ANPR_DB_HOST o ANPR_DB_USER en el .env');
+  // pgAdmin (entrar, ejecutar la consulta y dejarla a la vista) lleva unos 30 segundos
+  test.setTimeout(2 * 60_000);
   expect(alarmas.size, 'Requiere las alarmas de INT-ALARMA-01').toBe(PATENTES.length);
 
   // Para que se vea: la misma consulta en pgAdmin, con el historial de las tres alarmas. Si pgAdmin
