@@ -40,7 +40,8 @@ pipeline {
               'PLAYWRIGHT_JUNIT_OUTPUT_FILE=playwright-report/junit/extraccion.xml',
             ]) {
               // Sin reintentos: cada intento pide otra extracción remota
-              bat 'npx playwright test --project=integracion vms-bd --retries=0 --reporter=list,html,junit'
+              // La carpeta completa: el workspace de Jenkins se llama como el job y también contiene "vms-bd"
+              bat 'npx playwright test --project=integracion tests/integracion/vms-bd/ --retries=0 --reporter=list,html,junit'
             }
           }
         }

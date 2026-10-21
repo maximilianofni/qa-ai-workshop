@@ -42,7 +42,8 @@ pipeline {
               'PLAYWRIGHT_JUNIT_OUTPUT_FILE=playwright-report/junit/residuos.xml',
             ]) {
               // Sin reintentos: cada intento vuelve a programar e instalar AS
-              bat 'npx playwright test --project=integracion as-vms --retries=0 --reporter=list,html,junit'
+              // La carpeta completa: el workspace de Jenkins se llama como el job y también contiene "as-vms"
+              bat 'npx playwright test --project=integracion tests/integracion/as-vms/ --retries=0 --reporter=list,html,junit'
             }
           }
         }
