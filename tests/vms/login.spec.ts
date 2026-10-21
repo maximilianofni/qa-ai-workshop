@@ -28,8 +28,12 @@ async function iniciarSesion(exe: string, usuario: string, password: string) {
 
   // Pantalla de login con el sistema de testing seleccionado
   await expect.poll(() => vms.textos(), { timeout: 30_000 }).toContain('INICIAR SESIÓN');
-  const login = await vms.textos();
-  expect(login.some((t) => t.startsWith(process.env.VMS_SISTEMA!)), `Sistema seleccionado: ${login}`).toBe(true);
+  // Si quedó elegido otro sistema, se elige el de testing. El mensaje muestra solo el sistema: la
+  // pantalla expone también la contraseña
+  await vms.elegirSistema(process.env.VMS_SISTEMA!);
+  await expect
+    .poll(() => vms.sistema(), { message: 'Sistema seleccionado' })
+    .toMatch(new RegExp(`^${process.env.VMS_SISTEMA}`));
 
   // Usuario y contraseña: los campos de texto 0 y 1 del formulario
   await vms.escribir(0, usuario);
