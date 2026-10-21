@@ -1,0 +1,66 @@
+// Pipeline de Jenkins de la integración AS → VMS (tests/integracion/as-vms): la analítica de
+// residuos de AS manda eventos a VMS y se abren en Control Center.
+// Cada integración entre productos tiene su propio Jenkinsfile.integracion-<productos> y su job.
+// Como la etapa VMS del pipeline de productos, necesita un Jenkins iniciado en la sesión del usuario
+// (npm run jenkins) con la PC desbloqueada: Control Center se maneja con el mouse. No usar la PC
+// mientras corre. Usa la VM de AS: no correr a la vez que la etapa AS ni otra integración con AS
+// (si coinciden, el test se frena con "AS ya está instalado").
+
+pipeline {
+  agent any
+
+  options {
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    CI = 'true'
+    CYPRESS_INSTALL_BINARY = '0' // el pipeline no corre Cypress
+    PLAYWRIGHT_HTML_OPEN = 'never'
+    AS_HOST = '10.150.2.165'
+    AS_DIR = '/home/testing/server2.4'
+    VMS_DIR = 'C:\\Program Files (x86)\\Danaide\\UltraIP Client'
+    VMS_SISTEMA = 'system 145'
+  }
+
+  stages {
+    stage('Instalar dependencias') {
+      steps {
+        dir('playwright-report') { deleteDir() }
+        bat 'npm ci'
+      }
+    }
+    stage('AS → VMS: Residuos') {
+      steps {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          withCredentials([
+            usernamePassword(credentialsId: 'vms', usernameVariable: 'VMS_USER', passwordVariable: 'VMS_PASSWORD'),
+            usernamePassword(credentialsId: 'as', usernameVariable: 'AS_USER', passwordVariable: 'AS_PASSWORD'),
+          ]) {
+            withEnv([
+              'PLAYWRIGHT_HTML_OUTPUT_DIR=playwright-report/residuos',
+              'PLAYWRIGHT_JUNIT_OUTPUT_FILE=playwright-report/junit/residuos.xml',
+            ]) {
+              // Sin reintentos: cada intento vuelve a programar e instalar AS
+              bat 'npx playwright test --project=integracion as-vms --retries=0 --reporter=list,html,junit'
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      junit allowEmptyResults: true, testResults: 'playwright-report/junit/*.xml'
+      publishHTML(target: [
+        reportName: 'Reporte AS → VMS Residuos',
+        reportDir: 'playwright-report/residuos',
+        reportFiles: 'index.html',
+        keepAll: true,
+        alwaysLinkToLastBuild: true,
+        allowMissing: true,
+      ])
+    }
+  }
+}

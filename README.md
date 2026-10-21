@@ -369,7 +369,7 @@ docs/                   Documentación del workshop
 prompts/                Prompts para el agente de IA (uno por requerimiento)
 .github/workflows/      Pipelines de CI y releases
 Jenkinsfile             Pipeline de Jenkins (una etapa por producto)
-Jenkinsfile.integracion-as-anpr  Pipeline de Jenkins de la integración AS → ANPR
+Jenkinsfile.integracion-*  Pipelines de Jenkins de cada integración (as-anpr, vms-bd, as-vms)
 playwright.config.ts    Configuración de Playwright (navegador, reportes, evidencias)
 cypress.config.ts       Configuración de Cypress
 .mocharc.json           Configuración de Mocha para Selenium
@@ -433,6 +433,8 @@ de tu sesión (no como servicio de Windows), así los tests de VMS pueden abrir 
    | `biblioteca-digital` | Biblioteca Digital (`BD_USER` / `BD_PASSWORD`) |
    | `as` | La VM de AS (`AS_USER` / `AS_PASSWORD`) |
    | `vms` | VMS (`VMS_USER` / `VMS_PASSWORD`) |
+   | `anpr-bd` | La base de datos de ANPR, para INT-ALARMA-04 (`ANPR_DB_USER` / `ANPR_DB_PASSWORD`) |
+   | `pgadmin` | pgAdmin, donde INT-ALARMA-04 muestra la consulta (`PGADMIN_USER` / `PGADMIN_PASSWORD`) |
 
 5. **Crear el job**: *Nueva tarea* → nombre `qa-ai-workshop` → tipo **Pipeline**. En *Pipeline*
    elegir *Pipeline script from SCM* → *Git*, con la URL
@@ -459,13 +461,17 @@ de productos porque instalan AS, crean datos y tardan más. Siguen la misma conv
 | Integración | Tests | Pipeline | Job |
 |---|---|---|---|
 | AS → ANPR | `tests/integracion/as-anpr/` | [Jenkinsfile.integracion-as-anpr](Jenkinsfile.integracion-as-anpr) | `integracion-as-anpr` |
+| VMS → Biblioteca Digital | `tests/integracion/vms-bd/` | [Jenkinsfile.integracion-vms-bd](Jenkinsfile.integracion-vms-bd) | `integracion-vms-bd` |
+| AS → VMS (Residuos) | `tests/integracion/as-vms/` | [Jenkinsfile.integracion-as-vms](Jenkinsfile.integracion-as-vms) | `integracion-as-vms` |
 
-Una integración nueva (por ejemplo AS → VMS) suma su carpeta `tests/integracion/as-vms/`, su
-`Jenkinsfile.integracion-as-vms` y su job. El pipeline de AS → ANPR tiene una etapa por circuito:
-*Lista y detalle* y *Alarmas*.
+Una integración nueva suma su carpeta `tests/integracion/<productos>/`, su
+`Jenkinsfile.integracion-<productos>` y su job. El pipeline de AS → ANPR tiene una etapa por
+circuito: *Lista y detalle* y *Alarmas*; usa las credenciales `anpr-bd` y `pgadmin` para
+INT-ALARMA-04. Los de VMS → Biblioteca y AS → VMS tienen una sola etapa y, como la etapa VMS del
+pipeline de productos, necesitan la PC desbloqueada y sin usar el mouse mientras corren.
 
-- El job se crea igual que el de productos, cambiando el nombre y el Script Path
-  (`Jenkinsfile.integracion-as-anpr`). Usa las credenciales `anpr` y `as` que ya están cargadas.
+- Cada job se crea igual que el de productos, con el nombre y el Script Path de la tabla. Usan las
+  credenciales `anpr`, `biblioteca-digital`, `as` y `vms`; AS → ANPR, además, `anpr-bd` y `pgadmin`.
 - El parámetro **VER_NAVEGADOR** abre el navegador en pantalla, con ANPR y el video de AS lado a
   lado: pensado para mostrarlo en una demo.
 - Corre sin reintentos: cada intento vuelve a instalar AS y a crear datos en ANPR.

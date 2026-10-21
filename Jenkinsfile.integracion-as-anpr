@@ -11,6 +11,9 @@ def integracion(String archivo) {
     withCredentials([
       usernamePassword(credentialsId: 'anpr', usernameVariable: 'APP_USER', passwordVariable: 'APP_PASSWORD'),
       usernamePassword(credentialsId: 'as', usernameVariable: 'AS_USER', passwordVariable: 'AS_PASSWORD'),
+      // INT-ALARMA-04: la base de ANPR (solo lectura) y pgAdmin, donde se muestra la consulta
+      usernamePassword(credentialsId: 'anpr-bd', usernameVariable: 'ANPR_DB_USER', passwordVariable: 'ANPR_DB_PASSWORD'),
+      usernamePassword(credentialsId: 'pgadmin', usernameVariable: 'PGADMIN_USER', passwordVariable: 'PGADMIN_PASSWORD'),
     ]) {
       withEnv([
         "PLAYWRIGHT_HTML_OUTPUT_DIR=playwright-report/${archivo}",
@@ -43,6 +46,10 @@ pipeline {
     BASE_URL = 'https://nginx-central-anpr.testing.docker.dev-dnd.com/www/'
     AS_HOST = '10.150.2.165'
     AS_DIR = '/home/testing/server2.4'
+    ANPR_DB_HOST = 'postgres.testing.docker.dev-dnd.com'
+    ANPR_DB_PORT = '5432'
+    ANPR_DB_NAME = 'ANPR'
+    PGADMIN_URL = 'https://pgadmin-common-services.testing.docker.dev-dnd.com/'
   }
 
   stages {

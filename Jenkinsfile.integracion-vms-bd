@@ -1,0 +1,64 @@
+// Pipeline de Jenkins de la integración VMS → Biblioteca Digital (tests/integracion/vms-bd): desde
+// Control Center se pide una extracción remota y se verifica que llegue a Biblioteca Digital.
+// Cada integración entre productos tiene su propio Jenkinsfile.integracion-<productos> y su job.
+// Como la etapa VMS del pipeline de productos, necesita un Jenkins iniciado en la sesión del usuario
+// (npm run jenkins) con la PC desbloqueada: Control Center se maneja con el mouse y el teclado, y la
+// web de Biblioteca Digital se abre en pantalla. No usar la PC mientras corre.
+
+pipeline {
+  agent any
+
+  options {
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    CI = 'true'
+    CYPRESS_INSTALL_BINARY = '0' // el pipeline no corre Cypress
+    PLAYWRIGHT_HTML_OPEN = 'never'
+    BD_BASE_URL = 'http://vms-extractions-web.testing.deploy.danaide.com.ar/'
+    VMS_DIR = 'C:\\Program Files (x86)\\Danaide\\UltraIP Client'
+    VMS_SISTEMA = 'system 145'
+  }
+
+  stages {
+    stage('Instalar dependencias') {
+      steps {
+        dir('playwright-report') { deleteDir() }
+        bat 'npm ci'
+      }
+    }
+    stage('VMS → Biblioteca: Extracción remota') {
+      steps {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          withCredentials([
+            usernamePassword(credentialsId: 'vms', usernameVariable: 'VMS_USER', passwordVariable: 'VMS_PASSWORD'),
+            usernamePassword(credentialsId: 'biblioteca-digital', usernameVariable: 'BD_USER', passwordVariable: 'BD_PASSWORD'),
+          ]) {
+            withEnv([
+              'PLAYWRIGHT_HTML_OUTPUT_DIR=playwright-report/extraccion',
+              'PLAYWRIGHT_JUNIT_OUTPUT_FILE=playwright-report/junit/extraccion.xml',
+            ]) {
+              // Sin reintentos: cada intento pide otra extracción remota
+              bat 'npx playwright test --project=integracion vms-bd --retries=0 --reporter=list,html,junit'
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      junit allowEmptyResults: true, testResults: 'playwright-report/junit/*.xml'
+      publishHTML(target: [
+        reportName: 'Reporte VMS → Biblioteca',
+        reportDir: 'playwright-report/extraccion',
+        reportFiles: 'index.html',
+        keepAll: true,
+        alwaysLinkToLastBuild: true,
+        allowMissing: true,
+      ])
+    }
+  }
+}
