@@ -1,0 +1,48 @@
+# Tests de Playwright como Jobs de Kubernetes: cada producto en su propio pod y en paralelo, con la
+# misma imagen de Docker (qa-ai-workshop-tests). Las credenciales vienen del Secret "qa-env", creado
+# a partir del .env. Se lanzan con scripts/kubernetes.cjs (npm run k8s:test).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qa-tests-anpr
+  labels: { app: qa-tests }
+spec:
+  backoffLimit: 0 # sin reintentos: un test que falla tiene que verse
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels: { app: qa-tests }
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: playwright
+          image: qa-ai-workshop-tests:latest
+          imagePullPolicy: Never # imagen construida en esta PC con Docker Desktop
+          args: ['npx', 'playwright', 'test', '--project=anpr', '--reporter=list']
+          envFrom:
+            - secretRef: { name: qa-env }
+          resources:
+            requests: { cpu: 500m, memory: 1Gi }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qa-tests-biblioteca
+  labels: { app: qa-tests }
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels: { app: qa-tests }
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: playwright
+          image: qa-ai-workshop-tests:latest
+          imagePullPolicy: Never
+          args: ['npx', 'playwright', 'test', '--project=biblioteca-digital', '--reporter=list']
+          envFrom:
+            - secretRef: { name: qa-env }
+          resources:
+            requests: { cpu: 500m, memory: 1Gi }

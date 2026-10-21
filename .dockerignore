@@ -1,0 +1,12 @@
+# Solo entran a la imagen package.json, la configuración y tests/ (ver Dockerfile)
+.env
+.git
+node_modules
+test-results
+playwright-report
+blob-report
+reports
+cypress
+selenium
+katalon
+docs

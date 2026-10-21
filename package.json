@@ -43,7 +43,11 @@
     "ka:report": "node scripts/katalon.cjs --reporte",
     "comparar": "node scripts/comparar.cjs && node scripts/abrir.cjs reports/comparacion.html",
     "comparar:ver": "node scripts/abrir.cjs reports/comparacion.html",
-    "jenkins": "node scripts/jenkins.cjs"
+    "jenkins": "node scripts/jenkins.cjs",
+    "docker:build": "node scripts/docker.cjs build",
+    "docker:test": "node scripts/docker.cjs test",
+    "k8s:test": "node scripts/kubernetes.cjs test",
+    "k8s:limpiar": "node scripts/kubernetes.cjs limpiar"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
