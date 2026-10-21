@@ -150,16 +150,19 @@ test(`INT-RES-01 | Los eventos de residuos de "${CAMARA_TEXTO}" llegan a Control
     await captura('3-eventos.png');
     expect(abiertos, `Eventos abiertos en Control Center`).toBe(EVENTOS);
 
-    // Lo que dice AS: cada evento es una ejecución correcta; las salteadas quedan como aviso
-    const { correctas, salteadas } = await ejecucionesResiduos(servidor);
-    console.log(`  AS hasta ahora: ${correctas} ejecuciones correctas, ${salteadas} salteadas`);
+    // Lo que dice AS: cada evento sale de una imagen analizada. Las ejecuciones que registra como
+    // correctas o salteadas no siempre coinciden con los eventos (#37): quedan como aviso
+    const { analizadas, correctas, salteadas } = await ejecucionesResiduos(servidor);
+    console.log(`  AS hasta ahora: ${analizadas} imágenes analizadas, ${correctas} correctas, ${salteadas} salteadas`);
     if (salteadas) {
       test.info().annotations.push({
         type: 'Aviso',
-        description: `AS salteó ${salteadas} ejecuciones (no recibió imagen de la cámara a tiempo)`,
+        description:
+          `AS registró ${salteadas} ejecuciones salteadas y ${correctas} correctas, con ${analizadas} imágenes ` +
+          'analizadas (#37)',
       });
     }
-    expect(correctas, 'Ejecuciones correctas de AS (una por evento)').toBeGreaterThanOrEqual(EVENTOS);
+    expect(analizadas, 'Imágenes analizadas por AS (una por evento)').toBeGreaterThanOrEqual(EVENTOS);
   } finally {
     await vms.cerrar();
   }

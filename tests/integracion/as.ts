@@ -84,10 +84,14 @@ export async function programarResiduos(config: string, horarios: string[]) {
 
 /**
  * Resultado de las ejecuciones programadas de la analítica de residuos desde `desde` (hora del
- * servidor), según el log del servicio: las que terminaron bien y las que AS salteó (por ejemplo
- * porque no recibió imagen de la cámara a tiempo).
+ * servidor), según el log del servicio: las que analizaron una imagen de la cámara (cada una manda
+ * un evento), las que AS dio por correctas y las que salteó. No siempre coinciden: si la cámara
+ * tarda unos 10 segundos en conectar, AS analiza la imagen y manda el evento, pero igual registra la
+ * ejecución como salteada.
  */
-export async function ejecucionesResiduos(desde: Date): Promise<{ correctas: number; salteadas: number }> {
+export async function ejecucionesResiduos(
+  desde: Date
+): Promise<{ analizadas: number; correctas: number; salteadas: number }> {
   const dos = (n: number) => String(n).padStart(2, '0');
   const fecha =
     `${desde.getFullYear()}-${dos(desde.getMonth() + 1)}-${dos(desde.getDate())} ` +
@@ -97,6 +101,7 @@ export async function ejecucionesResiduos(desde: Date): Promise<{ correctas: num
   });
   const contar = (texto: string) => salida.split('\n').filter((l) => l.includes(texto)).length;
   return {
+    analizadas: contar('Video Manager has already processed'),
     correctas: contar('Programmable Task executed correctly.'),
     salteadas: contar('has been skipped for today'),
   };
