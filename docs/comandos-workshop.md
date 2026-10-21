@@ -135,6 +135,48 @@ durante toda la prueba: el test abre la cámara y los modales de los eventos con
 
 ---
 
+## 6. CI/CD: GitHub Actions y Jenkins
+
+La idea a mostrar: **GitHub Actions** valida en la nube de GitHub en cada push; **Jenkins** corre
+los end-to-end acá adentro, donde llega a la red interna y al escritorio que necesita VMS.
+
+### Antes de la demo
+
+1. Levantar Jenkins en una consola y **dejarla abierta** (si se cierra, Jenkins se detiene):
+
+   ```
+   npm run jenkins
+   ```
+
+2. Entrar a <http://localhost:8080> con el usuario de Jenkins.
+3. Tener abierta la pestaña **Actions** del repo:
+   <https://github.com/maximilianofni/qa-ai-workshop/actions>.
+
+### Guion
+
+1. **GitHub Actions – CI.** Hacer un cambio chico (por ejemplo, en esta guía), commit y push a
+   `main`. En *Actions* aparece el workflow **CI**, que valida que compilen los tests de Playwright,
+   Cypress y Selenium. Mostrar que termina en verde y que corre en un servidor de GitHub, sin acceso a
+   la red interna.
+2. **GitHub Actions – Release.** Contar que al crear un tag `v*` (por ejemplo `v1.5.0`) el workflow
+   **Release** publica la versión con sus notas. No hace falta crearlo en vivo.
+3. **Jenkins – productos.** Job `qa-ai-workshop` → *Build with Parameters* → destildar AS y VMS para
+   que sea rápido (ANPR y Biblioteca Digital, menos de un minuto) → *Construir*. Mostrar el avance
+   etapa por etapa.
+4. **Jenkins – una integración.** Job `integracion-as-anpr` → *Build with Parameters* → destildar
+   *Alarmas* (más corta) y tildar **VER_NAVEGADOR** → *Construir*. Se ven ANPR y el video de AS lado a
+   lado mientras corre (unos 2 minutos).
+5. **Resultados.** En el build: *Test Result* (casos y su historial entre builds) y el **Reporte**
+   HTML con capturas, videos y trazas.
+6. **Cierre:** cada integración tiene su Jenkinsfile y su job (`integracion-as-anpr`,
+   `integracion-vms-bd`, `integracion-as-vms`); las credenciales viven en Jenkins, no en el código.
+
+**Tiempos aproximados de cada job completo:** `integracion-as-anpr` 4,5 min, `integracion-vms-bd`
+3 min e `integracion-as-vms` 4,5 min. Los dos de VMS necesitan la PC desbloqueada y sin tocar el
+mouse: para una demo en vivo conviene mostrar un build ya hecho.
+
+---
+
 ## Extra: tests de login de VMS
 
 Login correcto, contraseña incorrecta y usuario inválido en Control Center y Configurator.
