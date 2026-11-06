@@ -17,23 +17,22 @@ automatización** para compararlas en condiciones reales, empezando por la aplic
 | [Katalon](https://katalon.com/) | Funcional (herramienta visual) | [katalon/](katalon/) | ✅ Implementada (ejecución desde el IDE) |
 | [JMeter](https://jmeter.apache.org/) | Carga y rendimiento | — | 🕒 Planificada |
 
-## Agente de IA: Antigravity
+## Agentes de IA: Claude Code y Antigravity
 
-**Antigravity** es un entorno de desarrollo de Google con un **agente de IA** integrado. A
-diferencia de un asistente de chat, el agente **ejecuta tareas**:
+Todo el proyecto (los tests de los cuatro productos, las integraciones, la comparación de frameworks
+y el CI/CD) se construyó con **Claude Code**, el agente de Anthropic que trabaja desde la terminal de
+VS Code. A diferencia de un asistente de chat, un agente **ejecuta tareas**:
 
-- **Explora** la aplicación en el navegador para identificar campos, botones y mensajes.
+- **Explora** la aplicación para identificar campos, botones y mensajes.
 - **Escribe** el código de los tests en la herramienta indicada.
 - **Ejecuta** los tests y reporta los resultados.
-- **Deja evidencia** (capturas, grabaciones y plan de trabajo) para la revisión del equipo.
+- **Deja evidencia** (capturas, reportes y commits) para la revisión del equipo.
+
+En el workshop se muestra además **Antigravity**, el entorno de Google con un agente integrado y su
+propio navegador: en vivo se le pide en español un test nuevo de ANPR (LOGIN-04,
+[prompts/LOGIN-04.md](prompts/LOGIN-04.md)) y lo escribe y lo ejecuta solo.
 
 > Explicación para áreas no técnicas: [Antigravity aplicado a QA y Testing](docs/antigravity-para-testing.md).
-
-Para las tareas fuera del navegador usamos además **Claude Code**, el agente de Anthropic que
-trabaja desde la terminal: las integraciones entre productos (SSH, base de datos, la aplicación de
-escritorio de VMS), los pipelines de Jenkins y las pruebas con Docker y Kubernetes. Cada agente para
-su tarea: Antigravity prueba la web y deja evidencia visual; Claude Code ejecuta comandos, scripts y
-pipelines.
 
 ## Flujo de trabajo: QA + agente de IA
 
@@ -108,9 +107,9 @@ validan la salida de la consola y los archivos que quedan en `logs/`. Corren en 
 
 | ID | Caso | Qué valida |
 |---|---|---|
-| AS-INSTALL-01 | Instalación con la analítica de ANPR (`installer2.4-rc1.sh ... -i`) | La salida termina con `Installation complete.` y el servicio `uip-analytics-server` queda `active` |
-| AS-ANPR-01 | La analítica detecta patentes | El visor `http://10.150.2.165:4492/` responde, se detectan 5 patentes nuevas en `logs/<cámara>/<año>/<mes>/<día>/<hora>/log_file_*.log` y cada una tiene sus 3 fotos (`.jpg`, `_crop.jpg`, `_ref.jpg`) |
-| AS-UNINSTALL-01 | Desinstalación (`installer2.4-rc1.sh ... -u`) | La salida muestra `Uninstalling Analytics Server` y `Service has been uninstalled.`, y el servicio deja de correr |
+| AS-INSTALL-01 | Instalación con la analítica de ANPR (`installer2.4.1-ultima.sh -v 2.4.1-rc1 ... -i`) | La salida termina con `Installation complete.` y el servicio `uip-analytics-server` queda `active` |
+| AS-ANPR-01 | La analítica detecta patentes | El visor `http://10.150.2.165:4492/` responde, se detectan 5 patentes distintas en `logs/<cámara>/<año>/<mes>/<día>/<hora>/log_file_*.log` (AS informa cada patente en muchos cuadros y a veces la lee mal: no cuentan las repeticiones ni los errores de lectura de un carácter) y cada una tiene sus 3 fotos (`.jpg`, `_crop.jpg`, `_ref.jpg`) |
+| AS-UNINSTALL-01 | Desinstalación (`installer2.4.1-ultima.sh ... -u`) | La salida muestra `Uninstalling Analytics Server` y `Service has been uninstalled.`, y el servicio deja de correr |
 
 - Con `npm run test:as:headed` se abre el visor y la consola muestra cada patente a medida que
   se detecta y, al final, la ruta de sus fotos en el servidor.
