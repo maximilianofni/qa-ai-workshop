@@ -1,13 +1,20 @@
 import { test, expect } from '@playwright/test';
 import { ejecutar } from './ssh';
+import { INSTALADOR as ARCHIVO, VERSION } from './instalador';
 
 const DIR = process.env.AS_DIR!;
-const VERSION = '2.4-rc1';
 const INSTALADOR =
-  `./installer${VERSION}.sh -a cuda -v ${VERSION} -j ./server_config_ANPR.json ` +
+  `./${ARCHIVO} -a cuda -v ${VERSION} -j ./server_config_ANPR.json ` +
   `-f ${DIR}/videos_de_prueba -l ${DIR}/logs/`;
-// Cantidad de patentes a esperar: con el video de telepeaje aparece una cada 5-20 segundos
+// Patentes distintas a esperar: con el video de telepeaje aparece una cada 5-20 segundos
 const PATENTES_ESPERADAS = 5;
+// AS informa la patente en cada cuadro en que la ve, y en algunos cuadros la lee mal (NAH903 en vez
+// de NAM903). Una patente cuenta cuando tiene estas lecturas y le gana a sus variantes
+const LECTURAS_MINIMAS = 10;
+
+/** Difieren en un solo carácter: una es un error de lectura de la otra */
+const variantes = (a: string, b: string) =>
+  a !== b && a.length === b.length && [...a].filter((c, i) => c !== b[i]).length === 1;
 
 interface Deteccion {
   date: string;
@@ -42,7 +49,7 @@ test('AS-INSTALL-01 | El instalador con la analítica de ANPR termina con "Insta
   expect(servicio.salida.trim()).toBe('active');
 });
 
-test(`AS-ANPR-01 | La analítica detecta ${PATENTES_ESPERADAS} patentes y guarda log y 3 fotos por patente`, async ({ page }) => {
+test(`AS-ANPR-01 | La analítica detecta ${PATENTES_ESPERADAS} patentes distintas y guarda log y 3 fotos por patente`, async ({ page }) => {
   test.setTimeout(6 * 60_000);
 
   // Se abre el visor de patentes detectadas: con --headed se ve el video con las detecciones.
@@ -59,9 +66,10 @@ test(`AS-ANPR-01 | La analítica detecta ${PATENTES_ESPERADAS} patentes y guarda
     )
     .toBe(200);
 
-  // Las detecciones se leen de los logs nuevos (logs/<cámara>/<año>/<mes>/<día>/<hora>/log_file_*.log)
+  // Las detecciones se leen de los logs nuevos (logs/<cámara>/<año>/<mes>/<día>/<hora>/log_file_*.log).
+  const texto = (d: Deteccion) => d.license_plates[0].text;
+  let todas: Deteccion[] = [];
   let detecciones: Deteccion[] = [];
-  let mostradas = 0;
   await expect
     .poll(
       async () => {
@@ -69,27 +77,44 @@ test(`AS-ANPR-01 | La analítica detecta ${PATENTES_ESPERADAS} patentes y guarda
           `bash -c 'find ${DIR}/logs -name "log_file_*.log" -newermt @${inicio} ` +
             `-exec grep -h "\\"analytic\\":\\"anpr\\"" {} +'`
         );
-        detecciones = salida
+        todas = salida
           .split('\n')
           .filter((linea) => linea.startsWith('{'))
           .map((linea) => JSON.parse(linea) as Deteccion)
-          .filter((d) => Date.parse(d.date) / 1000 >= inicio);
-        // En la consola se ve cada patente a medida que se detecta
-        for (const d of detecciones.slice(mostradas, PATENTES_ESPERADAS)) {
-          console.log(`  Patente ${++mostradas}/${PATENTES_ESPERADAS}: ${d.license_plates[0].text}`);
+          .filter((d) => Date.parse(d.date) / 1000 >= inicio)
+          .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+        const lecturas = new Map<string, number>();
+        for (const d of todas) lecturas.set(texto(d), (lecturas.get(texto(d)) ?? 0) + 1);
+        const confirmada = (patente: string) =>
+          lecturas.get(patente)! >= LECTURAS_MINIMAS &&
+          [...lecturas].every(([otra, veces]) => !variantes(patente, otra) || veces < lecturas.get(patente)!);
+        // En la consola se ve cada patente nueva a medida que se confirma
+        for (const d of todas) {
+          if (detecciones.length === PATENTES_ESPERADAS) break;
+          const yaEsta = detecciones.some((o) => texto(o) === texto(d) || variantes(texto(o), texto(d)));
+          if (!yaEsta && confirmada(texto(d))) {
+            detecciones.push(d);
+            console.log(`  Patente ${detecciones.length}/${PATENTES_ESPERADAS}: ${texto(d)}`);
+          }
         }
         return detecciones.length;
       },
-      { message: 'Patentes detectadas desde la instalación', timeout: 5 * 60_000, intervals: [10_000] }
+      { message: 'Patentes distintas detectadas desde la instalación', timeout: 5 * 60_000, intervals: [10_000] }
     )
-    .toBeGreaterThanOrEqual(PATENTES_ESPERADAS);
+    .toBe(PATENTES_ESPERADAS);
+
+  const aviso =
+    `${todas.length} detecciones de ${new Set(todas.map(texto)).size} lecturas distintas ` +
+    `(AS informa la patente en cada cuadro y algunas lecturas son errores)`;
+  console.log(`  ${aviso}`);
+  test.info().annotations.push({ type: 'Detecciones de AS', description: aviso });
 
   await page.screenshot({ path: test.info().outputPath('visor-4492.png') });
   await test.info().attach('visor-4492.png', { path: test.info().outputPath('visor-4492.png') });
 
   // Cada patente tiene sus 3 fotos: la imagen, el recorte de la patente y la de referencia
   const resumen: string[] = [];
-  for (const deteccion of detecciones.slice(0, PATENTES_ESPERADAS)) {
+  for (const deteccion of detecciones) {
     const base = deteccion.file_name.replace(/\.jpg$/, '');
     const { salida } = await ejecutar(`bash -c 'find ${DIR}/logs -name "${base}*.jpg"'`);
     const rutas = salida.trim().split('\n').sort();

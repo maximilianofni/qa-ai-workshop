@@ -111,7 +111,7 @@ de AS (10.150.2.165), el test cambia los últimos `execution_time` de
 durante 3 minutos (7 ejecuciones, desde la hora del servidor) e instala AS:
 
 ```
-sudo ./installer2.4-rc1.sh -a cuda -v 2.4-rc1 -j ./server_config_Residuos_VMS_145.json -i
+sudo ./installer2.4.1-ultima.sh -a cuda -v 2.4.1-rc1 -j ./server_config_Residuos_VMS_145.json -i
 ```
 
 Los eventos "Desborde de residuos detectado" van apareciendo en el panel de Eventos de Control

@@ -1,10 +1,10 @@
 import { expect, Page, Browser } from '@playwright/test';
 import { ejecutar } from '../as/ssh';
+import { INSTALADOR, VERSION } from '../as/instalador';
 
 /** Pasos de AS compartidos por los tests de integración (con ANPR y con VMS) */
 
 const DIR = process.env.AS_DIR!;
-const VERSION = '2.4-rc1';
 
 /** Configuración con la que se instala AS (un JSON de AS_DIR) y opciones extra del instalador */
 export interface Analitica {
@@ -19,7 +19,7 @@ const ANPR: Analitica = {
 };
 
 const instalador = ({ config, opciones }: Analitica) =>
-  `./installer${VERSION}.sh -a cuda -v ${VERSION} -j ./${config}${opciones ? ` ${opciones}` : ''}`;
+  `./${INSTALADOR} -a cuda -v ${VERSION} -j ./${config}${opciones ? ` ${opciones}` : ''}`;
 
 interface Deteccion {
   date: string;
